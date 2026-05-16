@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Scenario: Dashboard with collapsible sidebar</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: Inter, system-ui, sans-serif; background: #f8fafc; height: 100vh; overflow: hidden; }
+
+  .layout { display: flex; height: 100vh; }
+
+  /* Sidebar */
+  .sidebar {
+    width: var(--sidebar-width, 260px);
+    background: #0f172a; color: white;
+    display: flex; flex-direction: column;
+    transition: width 0.2s ease;
+    overflow: var(--sidebar-overflow, visible);
+    flex-shrink: 0;
+    position: relative;
+  }
+  .sidebar.collapsed {
+    width: var(--sidebar-collapsed-width, 64px);
+  }
+  .sidebar-header {
+    padding: 20px; display: flex;
+    align-items: center; gap: 12px;
+    border-bottom: 1px solid #1e293b;
+  }
+  .sidebar-logo {
+    width: 32px; height: 32px; background: #3b82f6;
+    border-radius: 8px; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 700; font-size: 14px;
+  }
+  .sidebar-title { font-size: 16px; font-weight: 600; white-space: nowrap; overflow: hidden; }
+  .sidebar.collapsed .sidebar-title { display: none; }
+
+  .sidebar-nav { padding: 12px 8px; flex: 1; }
+  .nav-item {
+    display: flex; align-items: center; gap: 12px;
+    padding: 10px 12px; border-radius: 8px; color: #94a3b8;
+    font-size: 14px; cursor: pointer; white-space: nowrap;
+    position: relative;
+  }
+  .nav-item:hover { background: #1e293b; color: white; }
+  .nav-item.active { background: #1e293b; color: white; }
+  .nav-icon {
+    width: 20px; height: 20px; background: currentColor;
+    border-radius: 4px; flex-shrink: 0; opacity: 0.6;
+  }
+  .nav-label { overflow: hidden; }
+  .sidebar.collapsed .nav-label { display: none; }
+
+  /* Nav tooltip on hover when collapsed */
+  .nav-item .nav-tooltip {
+    display: none; position: absolute;
+    left: calc(100% + 12px); top: 50%; transform: translateY(-50%);
+    background: #1e293b; color: white; padding: 6px 12px;
+    border-radius: 6px; font-size: 13px; white-space: nowrap;
+    z-index: 100; pointer-events: none;
+  }
+  .sidebar.collapsed .nav-item:hover .nav-tooltip { display: block; }
+
+  .sidebar-footer {
+    padding: 16px; border-top: 1px solid #1e293b;
+  }
+  .collapse-btn {
+    width: 100%; padding: 8px; background: #1e293b;
+    border: none; border-radius: 6px; color: #94a3b8;
+    cursor: pointer; font-size: 13px;
+  }
+
+  /* Main content */
+  .main { flex: 1; overflow-y: auto; }
+  .topbar {
+    padding: 16px 32px; background: white;
+    border-bottom: 1px solid #e2e8f0;
+    display: flex; justify-content: space-between; align-items: center;
+  }
+  .topbar h1 { font-size: 20px; color: #0f172a; }
+  .topbar-actions { display: flex; gap: 8px; align-items: center; }
+  .topbar-btn {
+    padding: 8px 16px; border: 1px solid #e2e8f0; border-radius: 8px;
+    background: white; font-size: 13px; color: #475569; cursor: pointer;
+    position: relative;
+  }
+
+  /* Notification dropdown */
+  .notif-dropdown {
+    position: absolute; top: calc(100% + 8px); right: 0;
+    width: 320px; background: white;
+    border: 1px solid #e2e8f0; border-radius: 12px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+    z-index: 200; display: none;
+  }
+  .notif-dropdown.open { display: block; }
+  .notif-header {
+    padding: 12px 16px; border-bottom: 1px solid #e2e8f0;
+    font-size: 14px; font-weight: 600; color: #0f172a;
+  }
+  .notif-item {
+    padding: 12px 16px; border-bottom: 1px solid #f1f5f9;
+    font-size: 13px; color: #475569;
+  }
+  .notif-item:last-child { border-bottom: none; }
+  .notif-item strong { color: #0f172a; }
+
+  /* Card grid */
+  .content { padding: 32px; }
+  .card-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: var(--card-gap, 24px);
+  }
+  .card {
+    background: white; border-radius: 12px;
+    border: 1px solid #e2e8f0; padding: 24px;
+  }
+  .card-title { font-size: 13px; color: #64748b; font-weight: 500; text-transform: uppercase; letter-spacing: 0.05em; }
+  .card-value { font-size: 32px; font-weight: 700; color: #0f172a; margin-top: 8px; }
+  .card-change { font-size: 13px; margin-top: 4px; }
+  .card-change.up { color: #16a34a; }
+  .card-change.down { color: #dc2626; }
+  .card-chart {
+    height: 48px; margin-top: 16px; background: linear-gradient(90deg, #eff6ff 0%, #dbeafe 100%);
+    border-radius: 6px;
+  }
+
+  /* Profile dropdown */
+  .profile-wrapper { position: relative; }
+  .profile-btn {
+    width: 36px; height: 36px; border-radius: 50%;
+    background: #3b82f6; border: none; cursor: pointer;
+    color: white; font-weight: 600; font-size: 14px;
+  }
+  .profile-dropdown {
+    position: absolute; top: calc(100% + 8px); right: 0;
+    width: 200px; background: white;
+    border: 1px solid #e2e8f0; border-radius: 10px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+    z-index: 200; display: none; padding: 4px;
+  }
+  .profile-dropdown.open { display: block; }
+  .profile-dropdown a {
+    display: block; padding: 10px 12px; border-radius: 6px;
+    font-size: 13px; color: #334155; text-decoration: none;
+  }
+  .profile-dropdown a:hover { background: #f1f5f9; }
+  .profile-dropdown a.danger { color: #dc2626; }
+</style>
+</head>
+<body>
+
+<div class="layout" data-testid="layout">
+  <aside class="sidebar" data-testid="sidebar">
+    <div class="sidebar-header">
+      <div class="sidebar-logo">A</div>
+      <span class="sidebar-title">Acme Dashboard</span>
+    </div>
+    <nav class="sidebar-nav" data-testid="sidebar-nav">
+      <div class="nav-item active" data-testid="nav-overview">
+        <div class="nav-icon"></div>
+        <span class="nav-label">Overview</span>
+        <span class="nav-tooltip">Overview</span>
+      </div>
+      <div class="nav-item" data-testid="nav-analytics">
+        <div class="nav-icon"></div>
+        <span class="nav-label">Analytics</span>
+        <span class="nav-tooltip">Analytics</span>
+      </div>
+      <div class="nav-item" data-testid="nav-customers">
+        <div class="nav-icon"></div>
+        <span class="nav-label">Customers</span>
+        <span class="nav-tooltip">Customers</span>
+      </div>
+      <div class="nav-item" data-testid="nav-products">
+        <div class="nav-icon"></div>
+        <span class="nav-label">Products</span>
+        <span class="nav-tooltip">Products</span>
+      </div>
+      <div class="nav-item" data-testid="nav-orders">
+        <div class="nav-icon"></div>
+        <span class="nav-label">Orders</span>
+        <span class="nav-tooltip">Orders</span>
+      </div>
+      <div class="nav-item" data-testid="nav-settings">
+        <div class="nav-icon"></div>
+        <span class="nav-label">Settings</span>
+        <span class="nav-tooltip">Settings</span>
+      </div>
+    </nav>
+    <div class="sidebar-footer">
+      <button class="collapse-btn" data-testid="collapse-btn">Collapse</button>
+    </div>
+  </aside>
+
+  <div class="main" data-testid="main-content">
+    <div class="topbar" data-testid="topbar">
+      <h1>Overview</h1>
+      <div class="topbar-actions">
+        <button class="topbar-btn" data-testid="notif-btn">
+          Notifications
+          <div class="notif-dropdown" data-testid="notif-dropdown">
+            <div class="notif-header">Notifications</div>
+            <div class="notif-item"><strong>New order</strong> — #1234 from Alice ($299)</div>
+            <div class="notif-item"><strong>Payment failed</strong> — #1230 retry needed</div>
+            <div class="notif-item"><strong>Review</strong> — 5-star review on Widget Pro</div>
+            <div class="notif-item"><strong>Low stock</strong> — Gadget X below threshold</div>
+          </div>
+        </button>
+        <div class="profile-wrapper">
+          <button class="profile-btn" data-testid="profile-btn">J</button>
+          <div class="profile-dropdown" data-testid="profile-dropdown">
+            <a href="#">Profile</a>
+            <a href="#">Account settings</a>
+            <a href="#">Billing</a>
+            <a href="#" class="danger">Sign out</a>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="content">
+      <div class="card-grid" data-testid="card-grid">
+        <div class="card" data-testid="card-revenue">
+          <div class="card-title">Revenue</div>
+          <div class="card-value">$48,290</div>
+          <div class="card-change up">+12.5% from last month</div>
+          <div class="card-chart"></div>
+        </div>
+        <div class="card" data-testid="card-orders">
+          <div class="card-title">Orders</div>
+          <div class="card-value">1,284</div>
+          <div class="card-change up">+8.2% from last month</div>
+          <div class="card-chart"></div>
+        </div>
+        <div class="card" data-testid="card-customers">
+          <div class="card-title">Customers</div>
+          <div class="card-value">3,420</div>
+          <div class="card-change up">+4.1% from last month</div>
+          <div class="card-chart"></div>
+        </div>
+        <div class="card" data-testid="card-conversion">
+          <div class="card-title">Conversion</div>
+          <div class="card-value">3.2%</div>
+          <div class="card-change down">-0.4% from last month</div>
+          <div class="card-chart"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  const sidebar = document.querySelector('[data-testid="sidebar"]');
+  const collapseBtn = document.querySelector('[data-testid="collapse-btn"]');
+  collapseBtn.addEventListener('click', () => sidebar.classList.toggle('collapsed'));
+
+  document.querySelector('[data-testid="notif-btn"]').addEventListener('click', e => {
+    e.stopPropagation();
+    document.querySelector('[data-testid="notif-dropdown"]').classList.toggle('open');
+    document.querySelector('[data-testid="profile-dropdown"]').classList.remove('open');
+  });
+
+  document.querySelector('[data-testid="profile-btn"]').addEventListener('click', e => {
+    e.stopPropagation();
+    document.querySelector('[data-testid="profile-dropdown"]').classList.toggle('open');
+    document.querySelector('[data-testid="notif-dropdown"]').classList.remove('open');
+  });
+
+  document.addEventListener('click', () => {
+    document.querySelectorAll('.notif-dropdown, .profile-dropdown').forEach(d => d.classList.remove('open'));
+  });
+</script>
+</body>
+</html>

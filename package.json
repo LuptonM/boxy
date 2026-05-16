@@ -1,0 +1,52 @@
+{
+  "name": "boxy-layout",
+  "version": "0.1.0",
+  "description": "Spatial layout linter for Playwright with verified CSS causation analysis",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/esm/index.js",
+      "require": "./dist/index.js",
+      "default": "./dist/esm/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "tsc && tsc -p tsconfig.esm.json && node scripts/write-esm-package.mjs",
+    "dev": "tsc --watch",
+    "test": "npm run build && node test/unit.mjs && node test/run.mjs",
+    "test:broken": "npm run build && node test/run.mjs --broken",
+    "test:scenarios": "npm run build && node test/scenarios.mjs",
+    "test:scenarios:broken": "npm run build && node test/scenarios.mjs --broken",
+    "test:mutations": "npm run build && node test/mutations.mjs",
+    "test:mutations:verbose": "npm run build && node test/mutations.mjs --verbose",
+    "test:baseline": "npm run build && LAYOUT_BASELINE=true node test/run.mjs",
+    "prepublishOnly": "npm run build"
+  },
+  "keywords": [
+    "playwright",
+    "visual-regression",
+    "layout-testing",
+    "css",
+    "linter",
+    "spatial",
+    "overflow",
+    "clipping"
+  ],
+  "author": "",
+  "license": "MIT",
+  "type": "commonjs",
+  "peerDependencies": {
+    "playwright": ">=1.40.0"
+  },
+  "devDependencies": {
+    "@types/node": "^25.8.0",
+    "playwright": "^1.60.0",
+    "typescript": "^6.0.3"
+  }
+}

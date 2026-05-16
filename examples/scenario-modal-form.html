@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Scenario: Modal with nested dropdown</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: Inter, system-ui, sans-serif; background: #f1f5f9; }
+
+  /* Overlay */
+  .overlay {
+    position: fixed; inset: 0;
+    background: rgba(15,23,42,0.5);
+    display: flex; align-items: center; justify-content: center;
+    z-index: 1000;
+    display: none;
+  }
+  .overlay.open { display: flex; }
+
+  /* Modal — broken version adds overflow:hidden */
+  .modal {
+    background: white; border-radius: 16px;
+    width: 480px; max-height: 90vh;
+    box-shadow: 0 24px 48px rgba(0,0,0,0.18);
+    position: relative;
+    overflow: var(--modal-overflow, visible);
+  }
+  .modal-header {
+    padding: 20px 24px;
+    border-bottom: 1px solid #e2e8f0;
+    display: flex; justify-content: space-between; align-items: center;
+  }
+  .modal-header h2 { font-size: 18px; color: #0f172a; }
+  .modal-close {
+    width: 32px; height: 32px; border: none; background: #f1f5f9;
+    border-radius: 8px; cursor: pointer; font-size: 18px; color: #64748b;
+  }
+  .modal-body { padding: 24px; }
+
+  /* Form */
+  .form-group { margin-bottom: 16px; }
+  .form-group label {
+    display: block; font-size: 13px; font-weight: 600;
+    color: #475569; margin-bottom: 6px;
+  }
+  .form-group input, .form-group .select-trigger {
+    width: 100%; padding: 10px 12px;
+    border: 1px solid #e2e8f0; border-radius: 8px;
+    font-size: 14px; color: #334155; background: white;
+  }
+
+  /* Custom select */
+  .select-wrapper { position: relative; }
+  .select-trigger {
+    cursor: pointer; display: flex;
+    justify-content: space-between; align-items: center;
+  }
+  .select-trigger .arrow { font-size: 12px; color: #94a3b8; }
+  .select-dropdown {
+    position: absolute; top: calc(100% + 4px); left: 0; right: 0;
+    background: white; border: 1px solid #e2e8f0; border-radius: 10px;
+    padding: 4px; box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+    z-index: 1100; display: none;
+  }
+  .select-dropdown.open { display: block; }
+  .select-option {
+    padding: 10px 12px; border-radius: 6px; font-size: 14px;
+    color: #334155; cursor: pointer;
+  }
+  .select-option:hover { background: #f1f5f9; }
+  .select-option.selected { background: #eff6ff; color: #2563eb; font-weight: 500; }
+
+  .modal-footer {
+    padding: 16px 24px; border-top: 1px solid #e2e8f0;
+    display: flex; justify-content: flex-end; gap: 8px;
+  }
+  .btn {
+    padding: 10px 20px; border-radius: 8px; font-size: 14px;
+    font-weight: 500; cursor: pointer; border: none;
+  }
+  .btn-secondary { background: #f1f5f9; color: #475569; }
+  .btn-primary { background: #2563eb; color: white; }
+
+  /* Trigger button on page */
+  .page-content {
+    padding: 48px; display: flex; align-items: center;
+    justify-content: center; min-height: 100vh;
+  }
+  .open-btn {
+    padding: 14px 28px; background: #2563eb; color: white;
+    border: none; border-radius: 10px; font-size: 16px;
+    font-weight: 600; cursor: pointer;
+  }
+</style>
+</head>
+<body>
+
+<div class="page-content">
+  <button class="open-btn" data-testid="open-modal">Add shipping address</button>
+</div>
+
+<div class="overlay" data-testid="modal-overlay">
+  <div class="modal" data-testid="modal">
+    <div class="modal-header">
+      <h2>Shipping Address</h2>
+      <button class="modal-close" data-testid="modal-close">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label>Full name</label>
+        <input type="text" placeholder="Jane Smith" data-testid="input-name">
+      </div>
+      <div class="form-group">
+        <label>Street address</label>
+        <input type="text" placeholder="123 Main St" data-testid="input-street">
+      </div>
+      <div class="form-group">
+        <label>City</label>
+        <input type="text" placeholder="San Francisco" data-testid="input-city">
+      </div>
+      <div class="form-group">
+        <label>Country</label>
+        <div class="select-wrapper" data-testid="country-select">
+          <div class="select-trigger" data-testid="country-trigger">
+            <span>Select country</span>
+            <span class="arrow">&#9662;</span>
+          </div>
+          <div class="select-dropdown" data-testid="country-dropdown">
+            <div class="select-option" data-value="us">United States</div>
+            <div class="select-option" data-value="ca">Canada</div>
+            <div class="select-option" data-value="uk">United Kingdom</div>
+            <div class="select-option" data-value="de">Germany</div>
+            <div class="select-option" data-value="fr">France</div>
+            <div class="select-option" data-value="jp">Japan</div>
+            <div class="select-option" data-value="au">Australia</div>
+            <div class="select-option" data-value="br">Brazil</div>
+            <div class="select-option" data-value="in">India</div>
+            <div class="select-option" data-value="mx">Mexico</div>
+          </div>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>State / Province</label>
+        <div class="select-wrapper" data-testid="state-select">
+          <div class="select-trigger" data-testid="state-trigger">
+            <span>Select state</span>
+            <span class="arrow">&#9662;</span>
+          </div>
+          <div class="select-dropdown" data-testid="state-dropdown">
+            <div class="select-option" data-value="ca">California</div>
+            <div class="select-option" data-value="ny">New York</div>
+            <div class="select-option" data-value="tx">Texas</div>
+            <div class="select-option" data-value="fl">Florida</div>
+            <div class="select-option" data-value="il">Illinois</div>
+            <div class="select-option" data-value="wa">Washington</div>
+            <div class="select-option" data-value="co">Colorado</div>
+            <div class="select-option" data-value="or">Oregon</div>
+          </div>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>ZIP code</label>
+        <input type="text" placeholder="94102" data-testid="input-zip">
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" data-testid="btn-cancel">Cancel</button>
+      <button class="btn btn-primary" data-testid="btn-save">Save address</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  const openBtn = document.querySelector('[data-testid="open-modal"]');
+  const overlay = document.querySelector('[data-testid="modal-overlay"]');
+  const closeBtn = document.querySelector('[data-testid="modal-close"]');
+  const cancelBtn = document.querySelector('[data-testid="btn-cancel"]');
+
+  openBtn.addEventListener('click', () => overlay.classList.add('open'));
+  closeBtn.addEventListener('click', () => overlay.classList.remove('open'));
+  cancelBtn.addEventListener('click', () => overlay.classList.remove('open'));
+  overlay.addEventListener('click', e => { if (e.target === overlay) overlay.classList.remove('open'); });
+
+  document.querySelectorAll('.select-trigger').forEach(trigger => {
+    trigger.addEventListener('click', e => {
+      e.stopPropagation();
+      document.querySelectorAll('.select-dropdown').forEach(d => {
+        if (d !== trigger.nextElementSibling) d.classList.remove('open');
+      });
+      trigger.nextElementSibling.classList.toggle('open');
+    });
+  });
+
+  document.querySelectorAll('.select-option').forEach(opt => {
+    opt.addEventListener('click', () => {
+      const wrapper = opt.closest('.select-wrapper');
+      const trigger = wrapper.querySelector('.select-trigger span:first-child');
+      trigger.textContent = opt.textContent;
+      wrapper.querySelectorAll('.select-option').forEach(o => o.classList.remove('selected'));
+      opt.classList.add('selected');
+      opt.closest('.select-dropdown').classList.remove('open');
+    });
+  });
+
+  document.addEventListener('click', () => {
+    document.querySelectorAll('.select-dropdown').forEach(d => d.classList.remove('open'));
+  });
+</script>
+</body>
+</html>

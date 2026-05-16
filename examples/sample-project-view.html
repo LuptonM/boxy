@@ -1,0 +1,837 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Boxy — Sample Project View</title>
+<style>
+  :root {
+    --space-1: 4px; --space-2: 8px; --space-3: 12px; --space-4: 16px;
+    --space-5: 20px; --space-6: 24px; --space-8: 32px;
+    --color-surface: #ffffff; --color-bg: #f8fafc;
+    --color-border: #e2e8f0; --color-border-light: #f1f5f9;
+    --color-text: #0f172a; --color-text-secondary: #475569;
+    --color-text-muted: #94a3b8; --color-text-placeholder: #94a3b8;
+    --color-blue-50: #eff6ff; --color-blue-100: #dbeafe;
+    --color-blue-500: #3b82f6; --color-blue-600: #2563eb;
+    --color-blue-700: #1d4ed8;
+    --color-red-50: #fef2f2; --color-red-500: #ef4444; --color-red-600: #dc2626;
+    --color-green-50: #f0fdf4; --color-green-500: #22c55e; --color-green-600: #16a34a;
+    --color-amber-50: #fffbeb; --color-amber-500: #f59e0b;
+    --color-gray-50: #f8fafc; --color-gray-100: #f1f5f9;
+    --color-gray-200: #e2e8f0; --color-gray-800: #1e293b;
+    --radius-sm: 4px; --radius-md: 6px; --radius-lg: 8px;
+    --radius-xl: 12px; --radius-full: 9999px;
+    --shadow-sm: 0 1px 2px rgba(0,0,0,0.05);
+    --shadow-md: 0 4px 16px rgba(0,0,0,0.1);
+    --shadow-lg: 0 8px 24px rgba(0,0,0,0.12);
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: Inter, system-ui, sans-serif; background: var(--color-bg); height: 100vh; overflow: hidden; }
+
+  /* ── Layout ── */
+  .app { display: flex; flex-direction: column; height: 100vh; }
+
+  /* ── TopNav ── */
+  .topnav {
+    height: 48px; background: var(--color-surface);
+    border-bottom: 1px solid var(--color-border);
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0 var(--space-6); flex-shrink: 0; z-index: 10;
+  }
+  .topnav-left { display: flex; align-items: center; gap: var(--space-3); }
+  .logo { width: 28px; height: 28px; background: var(--color-blue-600); border-radius: var(--radius-md); display: flex; align-items: center; justify-content: center; color: white; font-weight: 700; font-size: 13px; }
+  .breadcrumb { display: flex; align-items: center; gap: var(--space-2); font-size: 14px; color: var(--color-text-secondary); }
+  .breadcrumb-sep { color: var(--color-text-muted); }
+  .breadcrumb-current { color: var(--color-blue-600); font-weight: 600; }
+  .topnav-right { display: flex; align-items: center; gap: var(--space-2); }
+  .topnav-btn {
+    width: 32px; height: 32px; border: none; border-radius: var(--radius-md);
+    background: transparent; cursor: pointer; font-size: 16px;
+    color: var(--color-text-secondary); position: relative;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .topnav-btn:hover { background: var(--color-gray-100); }
+  .topnav-badge {
+    position: absolute; top: 2px; right: 2px;
+    width: 8px; height: 8px; background: var(--color-red-500);
+    border-radius: var(--radius-full); border: 2px solid var(--color-surface);
+  }
+  .avatar-btn {
+    width: 32px; height: 32px; border-radius: var(--radius-full);
+    background: var(--color-blue-500); border: none; cursor: pointer;
+    color: white; font-weight: 600; font-size: 13px;
+  }
+
+  /* ── Notification Dropdown ── */
+  .notif-dropdown {
+    position: absolute; top: calc(100% + var(--space-2)); right: 0;
+    width: 380px; max-height: 480px; background: var(--color-surface);
+    border: 1px solid var(--color-border); border-radius: var(--radius-xl);
+    box-shadow: var(--shadow-lg); z-index: 1000; display: none;
+    overflow-y: auto;
+  }
+  .notif-dropdown.open { display: block; }
+  .notif-header {
+    padding: var(--space-4); border-bottom: 1px solid var(--color-border);
+    display: flex; justify-content: space-between; align-items: center;
+    position: sticky; top: 0; background: var(--color-surface);
+  }
+  .notif-header h3 { font-size: 14px; font-weight: 600; color: var(--color-text); }
+  .notif-mark-read { font-size: 12px; color: var(--color-blue-600); cursor: pointer; background: none; border: none; }
+  .notif-item {
+    padding: var(--space-3) var(--space-4);
+    border-bottom: 1px solid var(--color-border-light);
+    display: flex; gap: var(--space-3); cursor: pointer;
+  }
+  .notif-item:hover { background: var(--color-gray-50); }
+  .notif-icon {
+    width: 32px; height: 32px; border-radius: var(--radius-full);
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0; font-size: 14px;
+  }
+  .notif-icon.info { background: var(--color-blue-100); color: var(--color-blue-600); }
+  .notif-icon.success { background: var(--color-green-50); color: var(--color-green-600); }
+  .notif-icon.warning { background: var(--color-amber-50); color: var(--color-amber-500); }
+  .notif-icon.error { background: var(--color-red-50); color: var(--color-red-600); }
+  .notif-body { flex: 1; min-width: 0; }
+  .notif-title { font-size: 13px; font-weight: 600; color: var(--color-text); }
+  .notif-msg { font-size: 12px; color: var(--color-text-secondary); margin-top: 2px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+  .notif-meta { font-size: 11px; color: var(--color-text-muted); margin-top: var(--space-1); }
+  .notif-unread { width: 8px; height: 8px; background: var(--color-blue-500); border-radius: var(--radius-full); flex-shrink: 0; margin-top: 4px; }
+  .notif-footer { padding: var(--space-3) var(--space-4); text-align: center; }
+  .notif-footer a { font-size: 13px; color: var(--color-blue-600); text-decoration: none; }
+
+  /* ── Body ── */
+  .body { display: flex; flex: 1; overflow: hidden; }
+
+  /* ── Sidebar ── */
+  .sidebar {
+    width: var(--sidebar-width, 220px); background: var(--color-surface);
+    border-right: 1px solid var(--color-border);
+    display: flex; flex-direction: column; flex-shrink: 0;
+    transition: width 0.2s ease; overflow: visible;
+  }
+  .sidebar.collapsed { width: var(--sidebar-collapsed, 52px); }
+  .sidebar-header {
+    padding: var(--space-4); display: flex;
+    align-items: center; justify-content: space-between;
+    border-bottom: 1px solid var(--color-border);
+  }
+  .sidebar-title { font-size: 14px; font-weight: 600; color: var(--color-text); white-space: nowrap; overflow: hidden; }
+  .sidebar.collapsed .sidebar-title { display: none; }
+  .sidebar-toggle {
+    width: 24px; height: 24px; border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm); background: var(--color-surface);
+    cursor: pointer; font-size: 12px; color: var(--color-text-muted);
+    flex-shrink: 0;
+  }
+  .sidebar-nav { padding: var(--space-2); flex: 1; overflow-y: auto; }
+  .nav-item {
+    display: flex; align-items: center; gap: var(--space-3);
+    padding: var(--space-2) var(--space-3); border-radius: var(--radius-md);
+    font-size: 13px; color: var(--color-text-secondary);
+    cursor: pointer; white-space: nowrap; border-left: 2px solid transparent;
+    position: relative;
+  }
+  .nav-item:hover { background: var(--color-gray-50); }
+  .nav-item.active { background: var(--color-blue-50); color: var(--color-blue-700); border-left-color: var(--color-blue-600); font-weight: 500; }
+  .nav-icon { width: 18px; height: 18px; flex-shrink: 0; opacity: 0.7; }
+  .nav-label { overflow: hidden; }
+  .sidebar.collapsed .nav-label { display: none; }
+  .nav-badge { margin-left: auto; font-size: 11px; background: var(--color-blue-100); color: var(--color-blue-700); padding: 1px 6px; border-radius: var(--radius-full); font-weight: 600; }
+  .sidebar.collapsed .nav-badge { display: none; }
+
+  /* ── Main Content ── */
+  .main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+
+  /* ── Filter Bar ── */
+  .filter-bar {
+    padding: var(--space-3) var(--space-6);
+    background: var(--color-surface);
+    border-bottom: 1px solid var(--color-border);
+    display: flex; align-items: center; gap: var(--space-3);
+    flex-shrink: 0;
+  }
+  .filter-chip {
+    display: flex; align-items: center; gap: var(--space-1);
+    padding: var(--space-1) var(--space-3); height: 28px;
+    border: 1px solid var(--color-border); border-radius: var(--radius-md);
+    font-size: 12px; color: var(--color-text-secondary);
+    cursor: pointer; background: var(--color-surface);
+    white-space: nowrap; position: relative;
+  }
+  .filter-chip:hover { background: var(--color-gray-50); }
+  .filter-chip.active { background: var(--color-blue-50); border-color: var(--color-blue-500); color: var(--color-blue-700); }
+  .filter-chevron { font-size: 10px; }
+
+  /* Filter Popover */
+  .filter-popover {
+    position: absolute; top: calc(100% + var(--space-2)); left: 0;
+    min-width: 200px; max-height: 280px;
+    background: var(--color-surface); border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg); box-shadow: var(--shadow-md);
+    z-index: 30; display: none; overflow-y: auto; padding: var(--space-1);
+  }
+  .filter-popover.open { display: block; }
+  .filter-option {
+    display: flex; align-items: center; gap: var(--space-2);
+    padding: var(--space-2) var(--space-3); border-radius: var(--radius-sm);
+    font-size: 13px; color: var(--color-text); cursor: pointer;
+  }
+  .filter-option:hover { background: var(--color-blue-50); }
+  .filter-option input { accent-color: var(--color-blue-600); }
+
+  .filter-pills { display: flex; gap: var(--space-2); flex: 1; flex-wrap: wrap; overflow: hidden; }
+  .filter-pill {
+    display: flex; align-items: center; gap: var(--space-1);
+    padding: 2px var(--space-2); height: 22px;
+    border-radius: var(--radius-full); font-size: 11px; font-weight: 500;
+  }
+  .filter-pill.blue { background: var(--color-blue-100); color: var(--color-blue-700); }
+  .filter-pill.green { background: var(--color-green-50); color: var(--color-green-600); }
+  .filter-pill.amber { background: var(--color-amber-50); color: var(--color-amber-500); }
+  .filter-pill-clear { cursor: pointer; font-size: 10px; opacity: 0.6; }
+  .filter-result-count { font-size: 12px; color: var(--color-text-muted); white-space: nowrap; margin-left: auto; }
+
+  /* ── Data Table ── */
+  .table-area { flex: 1; overflow: auto; }
+  .data-table { width: 100%; border-collapse: collapse; }
+  .data-table thead { position: sticky; top: 0; z-index: 5; }
+  .data-table th {
+    text-align: left; padding: var(--space-3) var(--space-4);
+    font-size: 12px; font-weight: 600; color: var(--color-text-muted);
+    text-transform: uppercase; letter-spacing: 0.04em;
+    background: var(--color-gray-50); border-bottom: 1px solid var(--color-border);
+    white-space: nowrap; position: relative; cursor: pointer;
+  }
+  .data-table th:hover { color: var(--color-text-secondary); }
+  .th-sort-icon { font-size: 10px; margin-left: var(--space-1); }
+  .data-table td {
+    padding: var(--space-3) var(--space-4); font-size: 13px;
+    color: var(--color-text); border-bottom: 1px solid var(--color-border-light);
+    max-width: 300px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+  .data-table tr:hover td { background: var(--color-gray-50); }
+
+  .badge {
+    display: inline-flex; padding: 2px 8px; border-radius: var(--radius-full);
+    font-size: 11px; font-weight: 500;
+  }
+  .badge-open { background: var(--color-blue-100); color: var(--color-blue-700); }
+  .badge-closed { background: var(--color-gray-100); color: var(--color-gray-800); }
+  .badge-critical { background: var(--color-red-50); color: var(--color-red-600); }
+  .badge-warning { background: var(--color-amber-50); color: var(--color-amber-500); }
+  .badge-low { background: var(--color-green-50); color: var(--color-green-600); }
+
+  .row-actions { position: relative; }
+  .row-action-btn {
+    width: 28px; height: 28px; border: 1px solid transparent;
+    border-radius: var(--radius-sm); background: transparent;
+    cursor: pointer; font-size: 16px; color: var(--color-text-muted);
+  }
+  .row-action-btn:hover { background: var(--color-gray-100); border-color: var(--color-border); }
+
+  /* Row Action Dropdown */
+  .row-dropdown {
+    position: absolute; bottom: calc(100% + 4px); right: 0;
+    min-width: 160px; background: var(--color-surface);
+    border: 1px solid var(--color-border); border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-lg); z-index: 1000; padding: var(--space-1);
+    display: none;
+  }
+  .row-dropdown.open { display: block; }
+  .row-dropdown a {
+    display: block; padding: var(--space-2) var(--space-3);
+    border-radius: var(--radius-sm); font-size: 13px;
+    color: var(--color-text); text-decoration: none; cursor: pointer;
+  }
+  .row-dropdown a:hover { background: var(--color-gray-50); }
+  .row-dropdown a.danger { color: var(--color-red-600); }
+  .row-dropdown a.danger:hover { background: var(--color-red-50); }
+  .row-dropdown-divider { height: 1px; background: var(--color-border-light); margin: var(--space-1) 0; }
+
+  /* ── Detail Panel ── */
+  .detail-panel {
+    width: 420px; background: var(--color-surface);
+    border-left: 1px solid var(--color-border);
+    display: flex; flex-direction: column; flex-shrink: 0;
+    display: none; overflow: visible;
+  }
+  .detail-panel.open { display: flex; }
+  .detail-header {
+    padding: var(--space-4) var(--space-5);
+    border-bottom: 1px solid var(--color-border);
+    display: flex; align-items: flex-start; justify-content: space-between;
+  }
+  .detail-header h3 { font-size: 16px; font-weight: 600; color: var(--color-text); }
+  .detail-close {
+    width: 28px; height: 28px; border: none; border-radius: var(--radius-sm);
+    background: transparent; cursor: pointer; font-size: 16px;
+    color: var(--color-text-muted);
+  }
+  .detail-close:hover { background: var(--color-gray-100); }
+  .detail-tabs {
+    display: flex; background: var(--color-gray-50);
+    border-bottom: 1px solid var(--color-border);
+  }
+  .detail-tab {
+    padding: var(--space-3) var(--space-4); font-size: 13px;
+    color: var(--color-text-secondary); cursor: pointer;
+    background: none; border: none; border-left: 2px solid transparent;
+  }
+  .detail-tab:hover { color: var(--color-text); }
+  .detail-tab.active { color: var(--color-blue-600); border-left-color: var(--color-blue-600); font-weight: 500; background: var(--color-surface); }
+  .detail-tab .tab-badge {
+    display: inline-flex; min-width: 16px; height: 16px;
+    align-items: center; justify-content: center;
+    border-radius: var(--radius-full); font-size: 10px;
+    font-weight: 600; margin-left: var(--space-2);
+    background: var(--color-gray-200); color: var(--color-text-secondary);
+  }
+  .detail-tab.active .tab-badge { background: var(--color-blue-100); color: var(--color-blue-700); }
+  .detail-body { flex: 1; overflow-y: auto; padding: var(--space-5); }
+  .detail-section { margin-bottom: var(--space-6); }
+  .detail-section h4 { font-size: 12px; font-weight: 600; color: var(--color-text-muted); text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: var(--space-3); }
+  .detail-field { margin-bottom: var(--space-3); }
+  .detail-field-label { font-size: 12px; color: var(--color-text-muted); margin-bottom: 2px; }
+  .detail-field-value { font-size: 13px; color: var(--color-text); }
+  .detail-footer {
+    padding: var(--space-3) var(--space-5);
+    border-top: 1px solid var(--color-border);
+    display: flex; gap: var(--space-2); justify-content: flex-end;
+  }
+  .btn {
+    padding: var(--space-2) var(--space-4); border-radius: var(--radius-md);
+    font-size: 13px; font-weight: 500; cursor: pointer; border: none;
+  }
+  .btn-ghost { background: transparent; color: var(--color-text-secondary); }
+  .btn-ghost:hover { background: var(--color-gray-100); }
+  .btn-primary { background: var(--color-blue-600); color: white; }
+  .btn-primary:hover { background: var(--color-blue-700); }
+
+  /* ── Modal (for forms) ── */
+  .modal-overlay {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.1);
+    display: flex; align-items: center; justify-content: center;
+    z-index: 2000; display: none;
+  }
+  .modal-overlay.open { display: flex; }
+  .modal {
+    background: var(--color-surface); border-radius: var(--radius-xl);
+    width: 520px; max-height: calc(100vh - 64px);
+    box-shadow: 0 24px 48px rgba(0,0,0,0.18);
+    display: flex; flex-direction: column;
+    overflow: visible;
+  }
+  .modal-header {
+    padding: var(--space-5) var(--space-6);
+    border-bottom: 1px solid var(--color-border);
+    display: flex; justify-content: space-between; align-items: center;
+  }
+  .modal-header h2 { font-size: 18px; font-weight: 600; color: var(--color-text); }
+  .modal-close {
+    width: 28px; height: 28px; border: none; border-radius: var(--radius-sm);
+    background: transparent; cursor: pointer; font-size: 18px;
+    color: var(--color-text-muted);
+  }
+  .modal-body { padding: var(--space-6); flex: 1; overflow-y: auto; }
+  .modal-footer {
+    padding: var(--space-4) var(--space-6);
+    border-top: 1px solid var(--color-border);
+    display: flex; justify-content: flex-end; gap: var(--space-2);
+  }
+
+  .form-group { margin-bottom: var(--space-4); }
+  .form-group label { display: block; font-size: 13px; font-weight: 500; color: var(--color-text-secondary); margin-bottom: var(--space-1); }
+  .form-group input, .form-group textarea {
+    width: 100%; padding: var(--space-2) var(--space-3);
+    border: 1px solid var(--color-border); border-radius: var(--radius-md);
+    font-size: 13px; font-family: inherit;
+  }
+  .form-group textarea { min-height: 80px; resize: vertical; }
+
+  /* Select inside modal */
+  .form-select-wrapper { position: relative; }
+  .form-select-trigger {
+    width: 100%; padding: var(--space-2) var(--space-3);
+    border: 1px solid var(--color-border); border-radius: var(--radius-md);
+    font-size: 13px; background: var(--color-surface); cursor: pointer;
+    display: flex; justify-content: space-between; align-items: center;
+    color: var(--color-text);
+  }
+  .form-select-trigger.placeholder { color: var(--color-text-placeholder); }
+  .form-select-panel {
+    position: absolute; top: calc(100% + 4px); left: 0; right: 0;
+    background: var(--color-surface); border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg); box-shadow: var(--shadow-md);
+    z-index: 2100; display: none; padding: var(--space-1);
+    max-height: 200px; overflow-y: auto;
+  }
+  .form-select-panel.open { display: block; }
+  .form-select-option {
+    padding: var(--space-2) var(--space-3); border-radius: var(--radius-sm);
+    font-size: 13px; color: var(--color-text); cursor: pointer;
+    display: flex; align-items: center; gap: var(--space-2);
+  }
+  .form-select-option:hover { background: var(--color-blue-50); }
+  .form-select-option.selected { font-weight: 500; color: var(--color-blue-700); }
+  .form-select-radio {
+    width: 16px; height: 16px; border: 2px solid var(--color-border);
+    border-radius: var(--radius-full); flex-shrink: 0;
+  }
+  .form-select-option.selected .form-select-radio {
+    border-color: var(--color-blue-600);
+    box-shadow: inset 0 0 0 3.5px var(--color-blue-600);
+  }
+
+  /* ── Pagination ── */
+  .pagination {
+    padding: var(--space-3) var(--space-6);
+    border-top: 1px solid var(--color-border);
+    display: flex; align-items: center; justify-content: space-between;
+    background: var(--color-surface); flex-shrink: 0;
+  }
+  .pagination-info { font-size: 12px; color: var(--color-text-muted); }
+  .pagination-btns { display: flex; gap: var(--space-1); }
+  .pagination-btn {
+    padding: var(--space-1) var(--space-3); border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm); font-size: 12px; background: var(--color-surface);
+    color: var(--color-text-secondary); cursor: pointer;
+  }
+  .pagination-btn.active { background: var(--color-blue-600); color: white; border-color: var(--color-blue-600); }
+</style>
+</head>
+<body>
+
+<div class="app" data-testid="app">
+  <!-- TopNav -->
+  <header class="topnav" data-testid="topnav">
+    <div class="topnav-left">
+      <div class="logo">C</div>
+      <nav class="breadcrumb">
+        <span>Smith v Jones</span>
+        <span class="breadcrumb-sep">›</span>
+        <span class="breadcrumb-current">Issues</span>
+      </nav>
+    </div>
+    <div class="topnav-right">
+      <button class="topnav-btn" data-testid="search-btn" title="Search">&#128269;</button>
+      <button class="topnav-btn" data-testid="notif-btn" title="Notifications">
+        &#128276;
+        <span class="topnav-badge"></span>
+        <div class="notif-dropdown" data-testid="notif-dropdown">
+          <div class="notif-header">
+            <h3>Notifications</h3>
+            <button class="notif-mark-read">Mark all read</button>
+          </div>
+          <div class="notif-item">
+            <div class="notif-icon info">&#8505;</div>
+            <div class="notif-body">
+              <div class="notif-title">Extraction complete</div>
+              <div class="notif-msg">12 entities found in "Witness Statement - Dr. Patel"</div>
+              <div class="notif-meta">Smith v Jones &middot; 2 min ago</div>
+            </div>
+            <div class="notif-unread"></div>
+          </div>
+          <div class="notif-item">
+            <div class="notif-icon success">&#10003;</div>
+            <div class="notif-body">
+              <div class="notif-title">Document uploaded</div>
+              <div class="notif-msg">Expert report has been added to bundle "Medical Evidence"</div>
+              <div class="notif-meta">Smith v Jones &middot; 15 min ago</div>
+            </div>
+            <div class="notif-unread"></div>
+          </div>
+          <div class="notif-item">
+            <div class="notif-icon warning">&#9888;</div>
+            <div class="notif-body">
+              <div class="notif-title">Deadline approaching</div>
+              <div class="notif-msg">Response to Part 18 questions due in 3 days</div>
+              <div class="notif-meta">Smith v Jones &middot; 1 hr ago</div>
+            </div>
+          </div>
+          <div class="notif-item">
+            <div class="notif-icon error">&#10007;</div>
+            <div class="notif-body">
+              <div class="notif-title">OCR failed</div>
+              <div class="notif-msg">Could not process "Handwritten notes - 14 March"</div>
+              <div class="notif-meta">Smith v Jones &middot; 3 hrs ago</div>
+            </div>
+          </div>
+          <div class="notif-footer"><a href="#">View all notifications</a></div>
+        </div>
+      </button>
+      <div class="avatar-btn" data-testid="avatar-btn">ML</div>
+    </div>
+  </header>
+
+  <div class="body">
+    <!-- Sidebar -->
+    <aside class="sidebar" data-testid="sidebar">
+      <div class="sidebar-header">
+        <span class="sidebar-title">Project</span>
+        <button class="sidebar-toggle" data-testid="sidebar-toggle">&#171;</button>
+      </div>
+      <nav class="sidebar-nav" data-testid="sidebar-nav">
+        <div class="nav-item" data-testid="nav-dashboard"><span class="nav-icon">&#9632;</span><span class="nav-label">Dashboard</span></div>
+        <div class="nav-item" data-testid="nav-documents"><span class="nav-icon">&#128196;</span><span class="nav-label">Documents</span><span class="nav-badge">24</span></div>
+        <div class="nav-item" data-testid="nav-entities"><span class="nav-icon">&#128101;</span><span class="nav-label">Entities</span></div>
+        <div class="nav-item active" data-testid="nav-issues"><span class="nav-icon">&#9888;</span><span class="nav-label">Issues</span><span class="nav-badge">8</span></div>
+        <div class="nav-item" data-testid="nav-timeline"><span class="nav-icon">&#128337;</span><span class="nav-label">Timeline</span></div>
+        <div class="nav-item" data-testid="nav-evidence"><span class="nav-icon">&#128269;</span><span class="nav-label">Evidence</span></div>
+        <div class="nav-item" data-testid="nav-bundles"><span class="nav-icon">&#128218;</span><span class="nav-label">Bundles</span></div>
+        <div class="nav-item" data-testid="nav-drafting"><span class="nav-icon">&#9998;</span><span class="nav-label">Drafting</span></div>
+        <div class="nav-item" data-testid="nav-schedule"><span class="nav-icon">&#128176;</span><span class="nav-label">Schedule of Loss</span></div>
+      </nav>
+    </aside>
+
+    <!-- Main Content -->
+    <div class="main" data-testid="main">
+      <!-- Filter Bar -->
+      <div class="filter-bar" data-testid="filter-bar">
+        <div class="filter-chip" data-testid="filter-status">
+          Status <span class="filter-chevron">&#9662;</span>
+          <div class="filter-popover" data-testid="filter-status-popover">
+            <label class="filter-option"><input type="checkbox" checked> Open</label>
+            <label class="filter-option"><input type="checkbox" checked> In Progress</label>
+            <label class="filter-option"><input type="checkbox"> Closed</label>
+            <label class="filter-option"><input type="checkbox"> Archived</label>
+          </div>
+        </div>
+        <div class="filter-chip" data-testid="filter-priority">
+          Priority <span class="filter-chevron">&#9662;</span>
+          <div class="filter-popover" data-testid="filter-priority-popover">
+            <label class="filter-option"><input type="checkbox"> Critical</label>
+            <label class="filter-option"><input type="checkbox"> High</label>
+            <label class="filter-option"><input type="checkbox" checked> Medium</label>
+            <label class="filter-option"><input type="checkbox"> Low</label>
+          </div>
+        </div>
+        <div class="filter-chip" data-testid="filter-assignee">
+          Assignee <span class="filter-chevron">&#9662;</span>
+          <div class="filter-popover" data-testid="filter-assignee-popover">
+            <label class="filter-option"><input type="checkbox"> Marc Lupton</label>
+            <label class="filter-option"><input type="checkbox"> Sarah Chen</label>
+            <label class="filter-option"><input type="checkbox"> James Wilson</label>
+          </div>
+        </div>
+        <div class="filter-pills">
+          <span class="filter-pill blue">Open <span class="filter-pill-clear">&times;</span></span>
+          <span class="filter-pill blue">In Progress <span class="filter-pill-clear">&times;</span></span>
+          <span class="filter-pill amber">Medium <span class="filter-pill-clear">&times;</span></span>
+        </div>
+        <span class="filter-result-count">8 results</span>
+      </div>
+
+      <!-- Table -->
+      <div class="table-area" data-testid="table-area">
+        <table class="data-table" data-testid="data-table">
+          <thead>
+            <tr>
+              <th data-testid="th-title">Title <span class="th-sort-icon">&#9650;</span></th>
+              <th data-testid="th-status">Status</th>
+              <th data-testid="th-priority">Priority</th>
+              <th data-testid="th-assignee">Assignee</th>
+              <th data-testid="th-linked">Linked Docs</th>
+              <th data-testid="th-updated">Updated</th>
+              <th style="width:48px"></th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr data-testid="row-1">
+              <td>Causation gap in medical evidence</td>
+              <td><span class="badge badge-open">Open</span></td>
+              <td><span class="badge badge-critical">Critical</span></td>
+              <td>Marc Lupton</td>
+              <td>3</td>
+              <td>2 hrs ago</td>
+              <td><div class="row-actions"><button class="row-action-btn" data-testid="action-btn-1">&#8943;</button><div class="row-dropdown" data-testid="action-dropdown-1"><a href="#">View details</a><a href="#">Edit</a><a href="#">Link document</a><div class="row-dropdown-divider"></div><a href="#" class="danger">Archive</a></div></div></td>
+            </tr>
+            <tr data-testid="row-2">
+              <td>Inconsistent witness testimony on timeline</td>
+              <td><span class="badge badge-open">Open</span></td>
+              <td><span class="badge badge-critical">Critical</span></td>
+              <td>Sarah Chen</td>
+              <td>5</td>
+              <td>4 hrs ago</td>
+              <td><div class="row-actions"><button class="row-action-btn" data-testid="action-btn-2">&#8943;</button><div class="row-dropdown" data-testid="action-dropdown-2"><a href="#">View details</a><a href="#">Edit</a><a href="#">Link document</a><div class="row-dropdown-divider"></div><a href="#" class="danger">Archive</a></div></div></td>
+            </tr>
+            <tr data-testid="row-3">
+              <td>Missing disclosure: defendant's financial records</td>
+              <td><span class="badge badge-open">Open</span></td>
+              <td><span class="badge badge-warning">High</span></td>
+              <td>Marc Lupton</td>
+              <td>1</td>
+              <td>1 day ago</td>
+              <td><div class="row-actions"><button class="row-action-btn" data-testid="action-btn-3">&#8943;</button><div class="row-dropdown" data-testid="action-dropdown-3"><a href="#">View details</a><a href="#">Edit</a><a href="#">Link document</a><div class="row-dropdown-divider"></div><a href="#" class="danger">Archive</a></div></div></td>
+            </tr>
+            <tr data-testid="row-4">
+              <td>Expert report contradicts treating physician</td>
+              <td><span class="badge badge-open">Open</span></td>
+              <td><span class="badge badge-warning">High</span></td>
+              <td>James Wilson</td>
+              <td>2</td>
+              <td>2 days ago</td>
+              <td><div class="row-actions"><button class="row-action-btn" data-testid="action-btn-4">&#8943;</button><div class="row-dropdown" data-testid="action-dropdown-4"><a href="#">View details</a><a href="#">Edit</a><a href="#">Link document</a><div class="row-dropdown-divider"></div><a href="#" class="danger">Archive</a></div></div></td>
+            </tr>
+            <tr data-testid="row-5">
+              <td>Limitation period calculation needs review</td>
+              <td><span class="badge badge-open">Open</span></td>
+              <td><span class="badge badge-low">Medium</span></td>
+              <td>Sarah Chen</td>
+              <td>4</td>
+              <td>3 days ago</td>
+              <td><div class="row-actions"><button class="row-action-btn" data-testid="action-btn-5">&#8943;</button><div class="row-dropdown" data-testid="action-dropdown-5"><a href="#">View details</a><a href="#">Edit</a><a href="#">Link document</a><div class="row-dropdown-divider"></div><a href="#" class="danger">Archive</a></div></div></td>
+            </tr>
+            <tr data-testid="row-6">
+              <td>Quantum assessment for future care costs</td>
+              <td><span class="badge badge-open">Open</span></td>
+              <td><span class="badge badge-low">Medium</span></td>
+              <td>Marc Lupton</td>
+              <td>2</td>
+              <td>5 days ago</td>
+              <td><div class="row-actions"><button class="row-action-btn" data-testid="action-btn-6">&#8943;</button><div class="row-dropdown" data-testid="action-dropdown-6"><a href="#">View details</a><a href="#">Edit</a><a href="#">Link document</a><div class="row-dropdown-divider"></div><a href="#" class="danger">Archive</a></div></div></td>
+            </tr>
+            <tr data-testid="row-7">
+              <td>Without prejudice correspondence review</td>
+              <td><span class="badge badge-open">Open</span></td>
+              <td><span class="badge badge-low">Low</span></td>
+              <td>James Wilson</td>
+              <td>7</td>
+              <td>1 week ago</td>
+              <td><div class="row-actions"><button class="row-action-btn" data-testid="action-btn-7">&#8943;</button><div class="row-dropdown" data-testid="action-dropdown-7"><a href="#">View details</a><a href="#">Edit</a><a href="#">Link document</a><div class="row-dropdown-divider"></div><a href="#" class="danger">Archive</a></div></div></td>
+            </tr>
+            <tr data-testid="row-8">
+              <td>Part 36 offer strategy analysis</td>
+              <td><span class="badge badge-open">Open</span></td>
+              <td><span class="badge badge-low">Low</span></td>
+              <td>Sarah Chen</td>
+              <td>3</td>
+              <td>1 week ago</td>
+              <td><div class="row-actions"><button class="row-action-btn" data-testid="action-btn-8">&#8943;</button><div class="row-dropdown" data-testid="action-dropdown-8"><a href="#">View details</a><a href="#">Edit</a><a href="#">Link document</a><div class="row-dropdown-divider"></div><a href="#" class="danger">Archive</a></div></div></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Pagination -->
+      <div class="pagination" data-testid="pagination">
+        <span class="pagination-info">Showing 1-8 of 8</span>
+        <div class="pagination-btns">
+          <button class="pagination-btn">Prev</button>
+          <button class="pagination-btn active">1</button>
+          <button class="pagination-btn">Next</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Detail Panel (initially hidden) -->
+    <div class="detail-panel" data-testid="detail-panel">
+      <div class="detail-header">
+        <h3>Causation gap in medical evidence</h3>
+        <button class="detail-close" data-testid="detail-close">&times;</button>
+      </div>
+      <div class="detail-tabs">
+        <button class="detail-tab active" data-testid="tab-overview">Overview</button>
+        <button class="detail-tab" data-testid="tab-evidence">Evidence <span class="tab-badge">3</span></button>
+        <button class="detail-tab" data-testid="tab-notes">Notes <span class="tab-badge">5</span></button>
+      </div>
+      <div class="detail-body" data-testid="detail-body">
+        <div class="detail-section">
+          <h4>Details</h4>
+          <div class="detail-field">
+            <div class="detail-field-label">Status</div>
+            <div class="detail-field-value"><span class="badge badge-open">Open</span></div>
+          </div>
+          <div class="detail-field">
+            <div class="detail-field-label">Priority</div>
+            <div class="detail-field-value"><span class="badge badge-critical">Critical</span></div>
+          </div>
+          <div class="detail-field">
+            <div class="detail-field-label">Assignee</div>
+            <div class="detail-field-value">Marc Lupton</div>
+          </div>
+          <div class="detail-field">
+            <div class="detail-field-label">Created</div>
+            <div class="detail-field-value">14 May 2026</div>
+          </div>
+        </div>
+        <div class="detail-section">
+          <h4>Description</h4>
+          <p style="font-size:13px;color:var(--color-text);line-height:1.6">
+            The claimant's medical evidence does not clearly establish a causal link between the accident and the reported condition. Dr. Patel's report states the condition "may have been" pre-existing, while the treating physician's notes from March 2025 reference the accident as the direct cause. This inconsistency needs to be resolved before trial, potentially through a joint expert report or further medical examination.
+          </p>
+        </div>
+        <div class="detail-section">
+          <h4>Linked Documents</h4>
+          <div style="display:flex;flex-direction:column;gap:8px">
+            <div style="padding:8px 12px;background:var(--color-gray-50);border-radius:6px;font-size:13px;color:var(--color-text)">Dr. Patel — Expert Report (March 2026)</div>
+            <div style="padding:8px 12px;background:var(--color-gray-50);border-radius:6px;font-size:13px;color:var(--color-text)">GP Notes — Treating Physician (2024-2025)</div>
+            <div style="padding:8px 12px;background:var(--color-gray-50);border-radius:6px;font-size:13px;color:var(--color-text)">Accident Report — 12 Sept 2024</div>
+          </div>
+        </div>
+      </div>
+      <div class="detail-footer">
+        <button class="btn btn-ghost">Close</button>
+        <button class="btn btn-primary">Edit Issue</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal (hidden) -->
+  <div class="modal-overlay" data-testid="modal-overlay">
+    <div class="modal" data-testid="modal">
+      <div class="modal-header">
+        <h2>New Issue</h2>
+        <button class="modal-close" data-testid="modal-close">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label>Title</label>
+          <input type="text" placeholder="Brief description of the issue" data-testid="form-title">
+        </div>
+        <div class="form-group">
+          <label>Description</label>
+          <textarea placeholder="Detailed explanation..." data-testid="form-desc"></textarea>
+        </div>
+        <div class="form-group">
+          <label>Priority</label>
+          <div class="form-select-wrapper" data-testid="form-priority-select">
+            <div class="form-select-trigger placeholder" data-testid="form-priority-trigger">
+              <span>Select priority</span>
+              <span class="filter-chevron">&#9662;</span>
+            </div>
+            <div class="form-select-panel" data-testid="form-priority-panel">
+              <div class="form-select-option" data-value="critical"><span class="form-select-radio"></span> Critical</div>
+              <div class="form-select-option" data-value="high"><span class="form-select-radio"></span> High</div>
+              <div class="form-select-option" data-value="medium"><span class="form-select-radio"></span> Medium</div>
+              <div class="form-select-option" data-value="low"><span class="form-select-radio"></span> Low</div>
+            </div>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Assignee</label>
+          <div class="form-select-wrapper" data-testid="form-assignee-select">
+            <div class="form-select-trigger placeholder" data-testid="form-assignee-trigger">
+              <span>Select assignee</span>
+              <span class="filter-chevron">&#9662;</span>
+            </div>
+            <div class="form-select-panel" data-testid="form-assignee-panel">
+              <div class="form-select-option" data-value="marc"><span class="form-select-radio"></span> Marc Lupton</div>
+              <div class="form-select-option" data-value="sarah"><span class="form-select-radio"></span> Sarah Chen</div>
+              <div class="form-select-option" data-value="james"><span class="form-select-radio"></span> James Wilson</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-ghost" data-testid="modal-cancel">Cancel</button>
+        <button class="btn btn-primary" data-testid="modal-save">Create Issue</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  // Sidebar collapse
+  const sidebar = document.querySelector('[data-testid="sidebar"]');
+  document.querySelector('[data-testid="sidebar-toggle"]').addEventListener('click', () => {
+    sidebar.classList.toggle('collapsed');
+  });
+
+  // Notification dropdown
+  document.querySelector('[data-testid="notif-btn"]').addEventListener('click', e => {
+    e.stopPropagation();
+    document.querySelector('[data-testid="notif-dropdown"]').classList.toggle('open');
+  });
+
+  // Filter chips
+  document.querySelectorAll('.filter-chip').forEach(chip => {
+    chip.addEventListener('click', e => {
+      e.stopPropagation();
+      const popover = chip.querySelector('.filter-popover');
+      document.querySelectorAll('.filter-popover').forEach(p => { if (p !== popover) p.classList.remove('open'); });
+      popover.classList.toggle('open');
+    });
+  });
+
+  // Row action dropdowns
+  document.querySelectorAll('.row-action-btn').forEach(btn => {
+    btn.addEventListener('click', e => {
+      e.stopPropagation();
+      document.querySelectorAll('.row-dropdown').forEach(d => d.classList.remove('open'));
+      btn.nextElementSibling.classList.toggle('open');
+    });
+  });
+
+  // Row click → open detail panel
+  document.querySelectorAll('[data-testid="data-table"] tbody tr').forEach(row => {
+    row.addEventListener('click', e => {
+      if (e.target.closest('.row-actions')) return;
+      document.querySelector('[data-testid="detail-panel"]').classList.add('open');
+    });
+  });
+
+  // Detail panel close
+  document.querySelector('[data-testid="detail-close"]').addEventListener('click', () => {
+    document.querySelector('[data-testid="detail-panel"]').classList.remove('open');
+  });
+
+  // Detail tabs
+  document.querySelectorAll('.detail-tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      document.querySelectorAll('.detail-tab').forEach(t => t.classList.remove('active'));
+      tab.classList.add('active');
+    });
+  });
+
+  // Modal
+  // Double-click a row title to open "edit" modal (simulating "New Issue" for testing)
+  document.querySelectorAll('[data-testid="data-table"] tbody tr td:first-child').forEach(td => {
+    td.addEventListener('dblclick', e => {
+      e.stopPropagation();
+      document.querySelector('[data-testid="modal-overlay"]').classList.add('open');
+    });
+  });
+  document.querySelector('[data-testid="modal-close"]').addEventListener('click', () => {
+    document.querySelector('[data-testid="modal-overlay"]').classList.remove('open');
+  });
+  document.querySelector('[data-testid="modal-cancel"]').addEventListener('click', () => {
+    document.querySelector('[data-testid="modal-overlay"]').classList.remove('open');
+  });
+  document.querySelector('[data-testid="modal-overlay"]').addEventListener('click', e => {
+    if (e.target.classList.contains('modal-overlay')) {
+      document.querySelector('[data-testid="modal-overlay"]').classList.remove('open');
+    }
+  });
+
+  // Select triggers in modal
+  document.querySelectorAll('.form-select-trigger').forEach(trigger => {
+    trigger.addEventListener('click', e => {
+      e.stopPropagation();
+      document.querySelectorAll('.form-select-panel').forEach(p => {
+        if (p !== trigger.nextElementSibling) p.classList.remove('open');
+      });
+      trigger.nextElementSibling.classList.toggle('open');
+    });
+  });
+  document.querySelectorAll('.form-select-option').forEach(opt => {
+    opt.addEventListener('click', () => {
+      const wrapper = opt.closest('.form-select-wrapper');
+      const trigger = wrapper.querySelector('.form-select-trigger');
+      trigger.querySelector('span:first-child').textContent = opt.textContent.trim();
+      trigger.classList.remove('placeholder');
+      wrapper.querySelectorAll('.form-select-option').forEach(o => o.classList.remove('selected'));
+      opt.classList.add('selected');
+      wrapper.querySelector('.form-select-panel').classList.remove('open');
+    });
+  });
+
+  // Close all dropdowns on outside click
+  document.addEventListener('click', () => {
+    document.querySelectorAll('.notif-dropdown, .filter-popover, .row-dropdown, .form-select-panel').forEach(d => d.classList.remove('open'));
+  });
+</script>
+</body>
+</html>

@@ -1,0 +1,5 @@
+node_modules/
+dist/
+.layout-snapshots/
+*.log
+.DS_Store
