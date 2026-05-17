@@ -49,20 +49,6 @@
           }
         },
         {
-          id: "filter-bar-collapsed",
-          label: "Filter bar collapsed to 0px \u2014 clips all filters",
-          apply(doc) {
-            const f = doc.querySelector('[data-testid="filter-bar"]');
-            f.style.height = "0px";
-            f.style.overflow = "hidden";
-          },
-          remove(doc) {
-            const f = doc.querySelector('[data-testid="filter-bar"]');
-            f.style.height = "";
-            f.style.overflow = "";
-          }
-        },
-        {
           id: "pagination-offscreen",
           label: "Pagination pushed off-screen",
           apply(doc) {

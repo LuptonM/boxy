@@ -272,6 +272,7 @@ var Boxy = (() => {
     const edges = el.clip.clippedEdges;
     const totalClipped = edges.top + edges.bottom + edges.left + edges.right;
     if (totalClipped === 0) return null;
+    if (el.position !== "absolute" && el.position !== "fixed") return null;
     const edgeStr = Object.entries(edges).filter(([, v]) => v > 0).map(([k, v]) => `${k}: ${v}px`).join(", ");
     return {
       category: "CLIPPING",
@@ -351,13 +352,31 @@ but is clipped by: ${higher.clip.clippedBy}`
   // src/linter.ts
   function lint(model, config = {}) {
     const cfg = { ...DEFAULT_CONFIG, ...config };
-    const elementIssues = model.elements.filter((el) => !isIgnored(el.selector, cfg.ignore)).flatMap((el) => [
+    const filtered = model.elements.filter((el) => !isIgnored(el.selector, cfg.ignore));
+    const elementIssues = filtered.flatMap((el) => [
       checkClipping(el),
       ...checkCollapsed(el, cfg.collapsedMinSize),
       checkOffScreen(el, model.viewport)
     ]).filter((issue) => issue !== null);
+    const clippedSelectors = new Set(
+      elementIssues.filter((i) => i.category === "CLIPPING").map((i) => i.selector)
+    );
+    const deduped = elementIssues.filter((issue) => {
+      if (issue.category !== "CLIPPING") return true;
+      const el = model.elements.find((e) => e.selector === issue.selector);
+      if (!el) return true;
+      let parent = el.parentSelector;
+      const visited = /* @__PURE__ */ new Set();
+      while (parent && !visited.has(parent)) {
+        if (clippedSelectors.has(parent)) return false;
+        visited.add(parent);
+        const parentEl = model.elements.find((e) => e.selector === parent);
+        parent = parentEl?.parentSelector ?? null;
+      }
+      return true;
+    });
     const overlapIssues = findOverlapIssues(model.elements, cfg.ignore);
-    return [...elementIssues, ...overlapIssues];
+    return [...deduped, ...overlapIssues];
   }
 
   // src/regression.ts

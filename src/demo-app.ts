@@ -86,20 +86,6 @@ const mutations: Mutation[] = [
     }
   },
   {
-    id: 'filter-bar-collapsed',
-    label: 'Filter bar collapsed to 0px — clips all filters',
-    apply(doc) {
-      const f = doc.querySelector<HTMLElement>('[data-testid="filter-bar"]')!;
-      f.style.height = '0px';
-      f.style.overflow = 'hidden';
-    },
-    remove(doc) {
-      const f = doc.querySelector<HTMLElement>('[data-testid="filter-bar"]')!;
-      f.style.height = '';
-      f.style.overflow = '';
-    }
-  },
-  {
     id: 'pagination-offscreen',
     label: 'Pagination pushed off-screen',
     apply(doc) {

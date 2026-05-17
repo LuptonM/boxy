@@ -16,6 +16,12 @@ export function checkClipping(el: ElementModel): Issue | null {
   const totalClipped = edges.top + edges.bottom + edges.left + edges.right;
   if (totalClipped === 0) return null;
 
+  // Positioned elements (absolute/fixed) clipped by a parent is almost always
+  // a bug — dropdowns, popovers, tooltips should never be clipped.
+  // Static/relative elements clipped by overflow:hidden is usually intentional
+  // (text truncation with ellipsis, scroll containers, image cropping).
+  if (el.position !== 'absolute' && el.position !== 'fixed') return null;
+
   const edgeStr = Object.entries(edges)
     .filter(([, v]) => v > 0)
     .map(([k, v]) => `${k}: ${v}px`)
