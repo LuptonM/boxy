@@ -190,7 +190,12 @@ function loadSampleUI() {
 }
 
 frame.addEventListener('load', () => {
-  setTimeout(() => { reapplyMutations(); scaleFrame(); }, 50);
+  setTimeout(() => {
+    reapplyMutations();
+    scaleFrame();
+    // Auto-save baseline from clean state
+    saveBaseline();
+  }, 100);
 });
 
 loadSampleUI();
@@ -255,14 +260,21 @@ function applyCustomCSS() {
 
 let baselineLintIssueKeys = new Set<string>();
 
-document.getElementById('btn-baseline')!.addEventListener('click', () => {
+function saveBaseline() {
   const doc = getFrameDoc();
   if (!doc?.body) return;
-  baseline = captureInFrame('[data-testid="app"]');
-  // Remember issues already present in baseline so we can filter them out
-  const baselineLint = Boxy.lint(baseline);
-  baselineLintIssueKeys = new Set(baselineLint.map(i => i.category + '|' + i.selector + '|' + i.title));
-  showStatus('Baseline saved (' + baseline.elements.length + ' elements)');
+  try {
+    baseline = captureInFrame('[data-testid="app"]');
+    const baselineLint = Boxy.lint(baseline);
+    baselineLintIssueKeys = new Set(baselineLint.map(i => i.category + '|' + i.selector + '|' + i.title));
+  } catch {
+    // iframe not ready yet
+  }
+}
+
+document.getElementById('btn-baseline')!.addEventListener('click', () => {
+  saveBaseline();
+  if (baseline) showStatus('Baseline saved (' + baseline.elements.length + ' elements)');
 });
 
 document.getElementById('btn-run')!.addEventListener('click', () => {
@@ -316,7 +328,7 @@ function renderResults(issues: Issue[] | null) {
   const count = document.getElementById('results-count')!;
 
   if (!issues) {
-    body.innerHTML = '<div class="results-empty"><div class="icon">&#9744;</div><p>Click <strong>Save Baseline</strong>, toggle a mutation,<br>then click <strong>Run Boxy</strong></p></div>';
+    body.innerHTML = '<div class="results-empty"><div class="icon">&#9744;</div><p>Toggle a mutation, then click <strong>Run Boxy</strong></p></div>';
     count.textContent = '';
     return;
   }

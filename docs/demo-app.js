@@ -149,7 +149,8 @@
         setTimeout(() => {
           reapplyMutations();
           scaleFrame();
-        }, 50);
+          saveBaseline();
+        }, 100);
       });
       loadSampleUI();
       function getFrameDoc() {
@@ -215,13 +216,19 @@
         }
       }
       var baselineLintIssueKeys = /* @__PURE__ */ new Set();
-      document.getElementById("btn-baseline").addEventListener("click", () => {
+      function saveBaseline() {
         const doc = getFrameDoc();
         if (!doc?.body) return;
-        baseline = captureInFrame('[data-testid="app"]');
-        const baselineLint = Boxy.lint(baseline);
-        baselineLintIssueKeys = new Set(baselineLint.map((i) => i.category + "|" + i.selector + "|" + i.title));
-        showStatus("Baseline saved (" + baseline.elements.length + " elements)");
+        try {
+          baseline = captureInFrame('[data-testid="app"]');
+          const baselineLint = Boxy.lint(baseline);
+          baselineLintIssueKeys = new Set(baselineLint.map((i) => i.category + "|" + i.selector + "|" + i.title));
+        } catch {
+        }
+      }
+      document.getElementById("btn-baseline").addEventListener("click", () => {
+        saveBaseline();
+        if (baseline) showStatus("Baseline saved (" + baseline.elements.length + " elements)");
       });
       document.getElementById("btn-run").addEventListener("click", () => {
         const doc = getFrameDoc();
@@ -261,7 +268,7 @@
         const body = document.getElementById("results-body");
         const count = document.getElementById("results-count");
         if (!issues) {
-          body.innerHTML = '<div class="results-empty"><div class="icon">&#9744;</div><p>Click <strong>Save Baseline</strong>, toggle a mutation,<br>then click <strong>Run Boxy</strong></p></div>';
+          body.innerHTML = '<div class="results-empty"><div class="icon">&#9744;</div><p>Toggle a mutation, then click <strong>Run Boxy</strong></p></div>';
           count.textContent = "";
           return;
         }
