@@ -60,93 +60,59 @@ interface StyleChange {
 
 const mutations: Mutation[] = [
   {
-    id: 'table-overflow-hidden',
-    label: 'overflow:hidden on table — clips open dropdown',
-    apply(doc) { doc.querySelector<HTMLElement>('[data-testid="table-area"]')!.style.overflow = 'hidden'; },
-    remove(doc) { doc.querySelector<HTMLElement>('[data-testid="table-area"]')!.style.overflow = ''; },
-    setup(doc) {
-      // Open action menu on last row — it pops upward but gets clipped
-      const btn = doc.querySelector<HTMLElement>('[data-testid="action-btn-8"]');
-      if (btn) btn.click();
+    id: 'topnav-clipped',
+    label: 'Topnav height crushed — clips nav buttons',
+    apply(doc) {
+      const t = doc.querySelector<HTMLElement>('[data-testid="topnav"]')!;
+      t.style.height = '20px';
+      t.style.overflow = 'hidden';
+    },
+    remove(doc) {
+      const t = doc.querySelector<HTMLElement>('[data-testid="topnav"]')!;
+      t.style.height = '';
+      t.style.overflow = '';
     }
   },
   {
-    id: 'sidebar-collapse-zero',
-    label: 'Sidebar collapses to 0px — clips all nav items',
+    id: 'filter-bar-collapsed',
+    label: 'Filter bar collapsed to 0px — clips all filters',
     apply(doc) {
-      doc.documentElement.style.setProperty('--sidebar-collapsed', '0px');
-      doc.querySelector('[data-testid="sidebar"]')!.classList.add('collapsed');
+      const f = doc.querySelector<HTMLElement>('[data-testid="filter-bar"]')!;
+      f.style.height = '0px';
+      f.style.overflow = 'hidden';
     },
     remove(doc) {
-      doc.documentElement.style.removeProperty('--sidebar-collapsed');
-      doc.querySelector('[data-testid="sidebar"]')!.classList.remove('collapsed');
+      const f = doc.querySelector<HTMLElement>('[data-testid="filter-bar"]')!;
+      f.style.height = '';
+      f.style.overflow = '';
     }
   },
   {
-    id: 'main-overflow-hidden',
-    label: 'overflow:hidden on main — clips filter popover',
+    id: 'table-clipped',
+    label: 'Table area max-height too short — clips rows',
     apply(doc) {
-      doc.querySelector<HTMLElement>('[data-testid="main"]')!.style.overflow = 'hidden';
+      const t = doc.querySelector<HTMLElement>('[data-testid="table-area"]')!;
+      t.style.maxHeight = '400px';
+      t.style.overflow = 'hidden';
     },
     remove(doc) {
-      doc.querySelector<HTMLElement>('[data-testid="main"]')!.style.overflow = '';
-    },
-    setup(doc) {
-      // Open filter popover so it gets clipped
-      const chip = doc.querySelector<HTMLElement>('[data-testid="filter-status"]');
-      if (chip) chip.click();
+      const t = doc.querySelector<HTMLElement>('[data-testid="table-area"]')!;
+      t.style.maxHeight = '';
+      t.style.overflow = '';
     }
   },
   {
-    id: 'row-dropdown-down',
-    label: 'Dropdown opens downward — clipped at viewport edge',
+    id: 'pagination-offscreen',
+    label: 'Pagination pushed off-screen',
     apply(doc) {
-      doc.querySelectorAll<HTMLElement>('.row-dropdown').forEach(d => {
-        d.style.bottom = 'auto';
-        d.style.top = 'calc(100% + 4px)';
-      });
+      const p = doc.querySelector<HTMLElement>('[data-testid="pagination"]')!;
+      p.style.position = 'absolute';
+      p.style.left = '-9999px';
     },
     remove(doc) {
-      doc.querySelectorAll<HTMLElement>('.row-dropdown').forEach(d => {
-        d.style.bottom = '';
-        d.style.top = '';
-      });
-    },
-    setup(doc) {
-      const btn = doc.querySelector<HTMLElement>('[data-testid="action-btn-8"]');
-      if (btn) btn.click();
-    }
-  },
-  {
-    id: 'detail-panel-clipped',
-    label: 'Detail panel overflow:hidden + short max-height',
-    apply(doc) {
-      const body = doc.querySelector<HTMLElement>('[data-testid="detail-body"]');
-      if (body) { body.style.overflow = 'hidden'; body.style.maxHeight = '120px'; }
-    },
-    remove(doc) {
-      const body = doc.querySelector<HTMLElement>('[data-testid="detail-body"]');
-      if (body) { body.style.overflow = ''; body.style.maxHeight = ''; }
-    },
-    setup(doc) {
-      // Open detail panel to show the clipping
-      doc.querySelector<HTMLElement>('[data-testid="detail-panel"]')!.classList.add('open');
-    }
-  },
-  {
-    id: 'notif-off-screen',
-    label: 'Notification dropdown pushed off-screen',
-    apply(doc) {
-      const dd = doc.querySelector<HTMLElement>('[data-testid="notif-dropdown"]');
-      if (dd) dd.style.right = '-300px';
-    },
-    remove(doc) {
-      const dd = doc.querySelector<HTMLElement>('[data-testid="notif-dropdown"]');
-      if (dd) dd.style.right = '';
-    },
-    setup(doc) {
-      // Open the notification dropdown so the off-screen position is visible
-      doc.querySelector<HTMLElement>('[data-testid="notif-dropdown"]')!.classList.add('open');
+      const p = doc.querySelector<HTMLElement>('[data-testid="pagination"]')!;
+      p.style.position = '';
+      p.style.left = '';
     }
   },
 ];
@@ -236,24 +202,6 @@ function reapplyMutations() {
     }
   }
 
-  applyCustomCSS();
-}
-
-function applyCustomCSS() {
-  const doc = getFrameDoc();
-  if (!doc) return;
-  let styleEl = doc.getElementById('user-css');
-  const css = (document.getElementById('css-editor') as HTMLTextAreaElement).value.trim();
-  if (css) {
-    if (!styleEl) {
-      styleEl = doc.createElement('style');
-      styleEl.id = 'user-css';
-      doc.head.appendChild(styleEl);
-    }
-    styleEl.textContent = css;
-  } else if (styleEl) {
-    styleEl.remove();
-  }
 }
 
 // ── Buttons ──
@@ -281,44 +229,23 @@ document.getElementById('btn-run')!.addEventListener('click', () => {
   const doc = getFrameDoc();
   if (!doc?.body) return;
 
-  applyCustomCSS();
-
   const model = captureInFrame('[data-testid="app"]');
 
-  // Lint: only show issues NOT present in baseline (i.e. newly introduced)
+  // Lint: show only issues introduced by mutations (subtract baseline issues)
   const lintIssues = Boxy.lint(model).filter(
     i => !baselineLintIssueKeys.has(i.category + '|' + i.selector + '|' + i.title)
   );
 
-  // Regression: filter out spacing inconsistencies that also exist in baseline
-  let regressionIssues: Issue[] = [];
-  if (baseline) {
-    const baselineRegressionKeys = new Set(
-      Boxy.compare(baseline, baseline).map(i => i.category + '|' + i.selector + '|' + i.title)
-    );
-    regressionIssues = Boxy.compare(baseline, model).filter(
-      i => !baselineRegressionKeys.has(i.category + '|' + i.selector + '|' + i.title)
-    );
-  }
-
-  const allIssues = [...lintIssues, ...regressionIssues];
-  renderResults(allIssues);
-  highlightElements(doc, allIssues);
+  renderResults(lintIssues);
+  highlightElements(doc, lintIssues);
 });
 
 document.getElementById('btn-reset')!.addEventListener('click', () => {
   activeToggles.clear();
   grid.querySelectorAll('.toggle-item').forEach(el => el.classList.remove('active'));
-  (document.getElementById('css-editor') as HTMLTextAreaElement).value = '';
   baseline = null;
   loadSampleUI();
   renderResults(null);
-});
-
-let cssTimeout: ReturnType<typeof setTimeout>;
-document.getElementById('css-editor')!.addEventListener('input', () => {
-  clearTimeout(cssTimeout);
-  cssTimeout = setTimeout(() => applyCustomCSS(), 300);
 });
 
 // ── Render results ──

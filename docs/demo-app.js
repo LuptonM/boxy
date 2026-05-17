@@ -23,99 +23,59 @@
       }
       var mutations = [
         {
-          id: "table-overflow-hidden",
-          label: "overflow:hidden on table \u2014 clips open dropdown",
+          id: "topnav-clipped",
+          label: "Topnav height crushed \u2014 clips nav buttons",
           apply(doc) {
-            doc.querySelector('[data-testid="table-area"]').style.overflow = "hidden";
+            const t = doc.querySelector('[data-testid="topnav"]');
+            t.style.height = "20px";
+            t.style.overflow = "hidden";
           },
           remove(doc) {
-            doc.querySelector('[data-testid="table-area"]').style.overflow = "";
-          },
-          setup(doc) {
-            const btn = doc.querySelector('[data-testid="action-btn-8"]');
-            if (btn) btn.click();
+            const t = doc.querySelector('[data-testid="topnav"]');
+            t.style.height = "";
+            t.style.overflow = "";
           }
         },
         {
-          id: "sidebar-collapse-zero",
-          label: "Sidebar collapses to 0px \u2014 clips all nav items",
+          id: "filter-bar-collapsed",
+          label: "Filter bar collapsed to 0px \u2014 clips all filters",
           apply(doc) {
-            doc.documentElement.style.setProperty("--sidebar-collapsed", "0px");
-            doc.querySelector('[data-testid="sidebar"]').classList.add("collapsed");
+            const f = doc.querySelector('[data-testid="filter-bar"]');
+            f.style.height = "0px";
+            f.style.overflow = "hidden";
           },
           remove(doc) {
-            doc.documentElement.style.removeProperty("--sidebar-collapsed");
-            doc.querySelector('[data-testid="sidebar"]').classList.remove("collapsed");
+            const f = doc.querySelector('[data-testid="filter-bar"]');
+            f.style.height = "";
+            f.style.overflow = "";
           }
         },
         {
-          id: "main-overflow-hidden",
-          label: "overflow:hidden on main \u2014 clips filter popover",
+          id: "table-clipped",
+          label: "Table area max-height too short \u2014 clips rows",
           apply(doc) {
-            doc.querySelector('[data-testid="main"]').style.overflow = "hidden";
+            const t = doc.querySelector('[data-testid="table-area"]');
+            t.style.maxHeight = "400px";
+            t.style.overflow = "hidden";
           },
           remove(doc) {
-            doc.querySelector('[data-testid="main"]').style.overflow = "";
-          },
-          setup(doc) {
-            const chip = doc.querySelector('[data-testid="filter-status"]');
-            if (chip) chip.click();
+            const t = doc.querySelector('[data-testid="table-area"]');
+            t.style.maxHeight = "";
+            t.style.overflow = "";
           }
         },
         {
-          id: "row-dropdown-down",
-          label: "Dropdown opens downward \u2014 clipped at viewport edge",
+          id: "pagination-offscreen",
+          label: "Pagination pushed off-screen",
           apply(doc) {
-            doc.querySelectorAll(".row-dropdown").forEach((d) => {
-              d.style.bottom = "auto";
-              d.style.top = "calc(100% + 4px)";
-            });
+            const p = doc.querySelector('[data-testid="pagination"]');
+            p.style.position = "absolute";
+            p.style.left = "-9999px";
           },
           remove(doc) {
-            doc.querySelectorAll(".row-dropdown").forEach((d) => {
-              d.style.bottom = "";
-              d.style.top = "";
-            });
-          },
-          setup(doc) {
-            const btn = doc.querySelector('[data-testid="action-btn-8"]');
-            if (btn) btn.click();
-          }
-        },
-        {
-          id: "detail-panel-clipped",
-          label: "Detail panel overflow:hidden + short max-height",
-          apply(doc) {
-            const body = doc.querySelector('[data-testid="detail-body"]');
-            if (body) {
-              body.style.overflow = "hidden";
-              body.style.maxHeight = "120px";
-            }
-          },
-          remove(doc) {
-            const body = doc.querySelector('[data-testid="detail-body"]');
-            if (body) {
-              body.style.overflow = "";
-              body.style.maxHeight = "";
-            }
-          },
-          setup(doc) {
-            doc.querySelector('[data-testid="detail-panel"]').classList.add("open");
-          }
-        },
-        {
-          id: "notif-off-screen",
-          label: "Notification dropdown pushed off-screen",
-          apply(doc) {
-            const dd = doc.querySelector('[data-testid="notif-dropdown"]');
-            if (dd) dd.style.right = "-300px";
-          },
-          remove(doc) {
-            const dd = doc.querySelector('[data-testid="notif-dropdown"]');
-            if (dd) dd.style.right = "";
-          },
-          setup(doc) {
-            doc.querySelector('[data-testid="notif-dropdown"]').classList.add("open");
+            const p = doc.querySelector('[data-testid="pagination"]');
+            p.style.position = "";
+            p.style.left = "";
           }
         }
       ];
@@ -197,23 +157,6 @@
             }
           }
         }
-        applyCustomCSS();
-      }
-      function applyCustomCSS() {
-        const doc = getFrameDoc();
-        if (!doc) return;
-        let styleEl = doc.getElementById("user-css");
-        const css = document.getElementById("css-editor").value.trim();
-        if (css) {
-          if (!styleEl) {
-            styleEl = doc.createElement("style");
-            styleEl.id = "user-css";
-            doc.head.appendChild(styleEl);
-          }
-          styleEl.textContent = css;
-        } else if (styleEl) {
-          styleEl.remove();
-        }
       }
       var baselineLintIssueKeys = /* @__PURE__ */ new Set();
       function saveBaseline() {
@@ -233,36 +176,19 @@
       document.getElementById("btn-run").addEventListener("click", () => {
         const doc = getFrameDoc();
         if (!doc?.body) return;
-        applyCustomCSS();
         const model = captureInFrame('[data-testid="app"]');
         const lintIssues = Boxy.lint(model).filter(
           (i) => !baselineLintIssueKeys.has(i.category + "|" + i.selector + "|" + i.title)
         );
-        let regressionIssues = [];
-        if (baseline) {
-          const baselineRegressionKeys = new Set(
-            Boxy.compare(baseline, baseline).map((i) => i.category + "|" + i.selector + "|" + i.title)
-          );
-          regressionIssues = Boxy.compare(baseline, model).filter(
-            (i) => !baselineRegressionKeys.has(i.category + "|" + i.selector + "|" + i.title)
-          );
-        }
-        const allIssues = [...lintIssues, ...regressionIssues];
-        renderResults(allIssues);
-        highlightElements(doc, allIssues);
+        renderResults(lintIssues);
+        highlightElements(doc, lintIssues);
       });
       document.getElementById("btn-reset").addEventListener("click", () => {
         activeToggles.clear();
         grid.querySelectorAll(".toggle-item").forEach((el) => el.classList.remove("active"));
-        document.getElementById("css-editor").value = "";
         baseline = null;
         loadSampleUI();
         renderResults(null);
-      });
-      var cssTimeout;
-      document.getElementById("css-editor").addEventListener("input", () => {
-        clearTimeout(cssTimeout);
-        cssTimeout = setTimeout(() => applyCustomCSS(), 300);
       });
       function renderResults(issues) {
         const body = document.getElementById("results-body");
