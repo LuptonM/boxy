@@ -173,7 +173,7 @@ try {
   throw error;
 }
 
-const snapshotBase = path.join(__dirname, '..', '.layout-snapshots', 'mutations');
+const snapshotBase = path.join(__dirname, '..', '.boxy', 'mutations');
 
 // Phase 1: Capture baselines
 console.log('  Phase 1: Capturing baselines...\n');

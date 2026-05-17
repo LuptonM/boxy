@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Boxy — Spatial Layout Linter for Playwright</title>
+<link rel="stylesheet" href="demo.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body>
+
+<!-- Hero -->
+<section class="hero">
+  <h1>Boxy</h1>
+  <p class="tagline">Drop-in layout linter for Playwright. Add a few lines to your existing tests to catch clipping, overflow, and CSS regressions automatically.</p>
+  <div class="install-cmd" onclick="navigator.clipboard.writeText('npm install boxy-layout').then(() => { this.querySelector('.copy-hint').textContent = 'Copied!'; setTimeout(() => this.querySelector('.copy-hint').textContent = 'click to copy', 1500) })">
+    <span class="dollar">$</span>
+    <span>npm install boxy-layout</span>
+    <span class="copy-hint">click to copy</span>
+  </div>
+</section>
+
+<!-- Problem -->
+<section class="problem">
+  <div class="problem-card">
+    <p class="headline">Your CSS change <span class="highlight">broke 8 dropdowns</span>.</p>
+    <p class="subtext">Boxy tells you <span class="fix">which property caused it</span> &mdash; before your users do.<br>No new tests to write. It rides on the Playwright tests you already have.</p>
+  </div>
+</section>
+
+<!-- Interactive Demo -->
+<section class="demo-section">
+  <h2>Try It Live</h2>
+  <p class="subtitle">Toggle CSS mutations on a real UI, then run Boxy's analysis engine in your browser.</p>
+
+  <!-- Controls -->
+  <div class="demo-controls">
+    <div class="controls-header">
+      <h3>Mutations</h3>
+      <div class="controls-buttons">
+        <button class="btn btn-reset" id="btn-reset">Reset All</button>
+        <button class="btn btn-secondary" id="btn-baseline">Save Baseline</button>
+        <button class="btn btn-primary" id="btn-run">Run Boxy</button>
+      </div>
+    </div>
+
+    <div class="toggles-grid" id="toggles-grid">
+      <!-- Populated by JS -->
+    </div>
+
+    <div class="css-editor-section">
+      <div class="css-editor-label">Custom CSS</div>
+      <textarea class="css-editor" id="css-editor" placeholder=".table-area { overflow: hidden; }&#10;.sidebar { width: 0px; }"></textarea>
+    </div>
+  </div>
+
+  <!-- Demo Layout: Sample UI + Results -->
+  <div class="demo-layout">
+    <div class="sample-ui-frame" id="sample-ui-frame">
+      <span class="frame-label">Sample UI (1440 x 900)</span>
+      <div class="sample-ui-frame-inner" id="sample-ui-inner">
+        <iframe id="sample-frame"></iframe>
+      </div>
+    </div>
+    <div class="results-panel">
+      <div class="results-header">
+        <h3>Results</h3>
+        <span class="results-count" id="results-count"></span>
+      </div>
+      <div class="results-body" id="results-body">
+        <div class="results-empty">
+          <div class="icon">&#9744;</div>
+          <p>Click <strong>Save Baseline</strong>, toggle a mutation,<br>then click <strong>Run Boxy</strong></p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- How It Works -->
+<section class="how-section">
+  <h2>How It Works</h2>
+  <div class="how-steps">
+    <div class="how-step">
+      <div class="step-num">1</div>
+      <h3>Capture</h3>
+      <p>Boxy walks the DOM and builds a spatial model: bounding boxes, computed styles, overflow chains, sibling spacing, z-index stacking.</p>
+    </div>
+    <div class="how-step">
+      <div class="step-num">2</div>
+      <h3>Lint</h3>
+      <p>The linter detects issues without a baseline: clipping by overflow parents, collapsed containers, off-screen elements, z-index conflicts.</p>
+    </div>
+    <div class="how-step">
+      <div class="step-num">3</div>
+      <h3>Compare</h3>
+      <p>With a baseline, regression analysis catches position shifts, size changes, visibility loss, and spacing inconsistencies &mdash; with CSS diff attribution.</p>
+    </div>
+  </div>
+</section>
+
+<!-- Why Boxy -->
+<section class="why-section">
+  <h2>Why Boxy?</h2>
+  <p class="why-subtitle">Pixel diffing tells you <em>something changed</em>. Boxy tells you <em>what broke and why</em>.</p>
+  <div class="why-grid">
+    <div class="why-card">
+      <h3>Pixel diff</h3>
+      <div class="why-verdict bad">Fragile</div>
+      <ul>
+        <li>Fails on font rendering, antialiasing, animation timing</li>
+        <li>Shows a red blob &mdash; you still have to find the bug</li>
+        <li>No idea which CSS property caused the change</li>
+        <li>Needs exact screenshot match across environments</li>
+      </ul>
+    </div>
+    <div class="why-card featured">
+      <h3>Boxy</h3>
+      <div class="why-verdict good">Structural</div>
+      <ul>
+        <li>Piggybacks on your existing Playwright tests &mdash; add 3 lines, not a new tool</li>
+        <li>Compares layout geometry, not pixels &mdash; immune to rendering differences</li>
+        <li>Names the element, the issue category, and the clipping parent</li>
+        <li>Diffs computed styles to show which CSS property caused it</li>
+        <li>Catches overflow clipping, z-index burial, collapse &mdash; before users see it</li>
+      </ul>
+    </div>
+    <div class="why-card">
+      <h3>Manual QA</h3>
+      <div class="why-verdict bad">Slow</div>
+      <ul>
+        <li>Can't test every page state after every CSS change</li>
+        <li>Misses edge cases: last row dropdown, collapsed sidebar, deep scroll</li>
+        <li>Doesn't scale with component count</li>
+        <li>Catches issues after deploy, not during CI</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- Usage -->
+<section class="quickstart">
+  <h2>Usage</h2>
+
+  <div class="usage-step">
+    <div class="usage-step-header">
+      <span class="usage-step-num">1</span>
+      <span class="usage-step-title">Install</span>
+    </div>
+    <div class="code-block">
+<span class="dollar">$</span> npm install boxy-layout
+    </div>
+  </div>
+
+  <div class="usage-step">
+    <div class="usage-step-header">
+      <span class="usage-step-num">2</span>
+      <span class="usage-step-title">Add to an existing Playwright test</span>
+    </div>
+    <div class="code-block">
+<span class="kw">import</span> { test } <span class="kw">from</span> <span class="str">'@playwright/test'</span>;
+<span class="kw">import</span> { createBoxy } <span class="kw">from</span> <span class="str">'boxy-layout'</span>;
+
+<span class="fn">test</span>(<span class="str">'layout has no regressions'</span>, <span class="kw">async</span> ({ page }) => {
+  <span class="kw">const</span> boxy = <span class="fn">createBoxy</span>();
+
+  <span class="kw">await</span> page.<span class="fn">goto</span>(<span class="str">'http://localhost:3000/dashboard'</span>);
+
+  <span class="cmt">// Capture the spatial model &mdash; bounding boxes, styles, overflow chains</span>
+  <span class="kw">await</span> boxy.<span class="fn">capture</span>(page, {
+    name: <span class="str">'dashboard'</span>,
+    scope: <span class="str">'[data-testid="app"]'</span>
+  });
+
+  <span class="cmt">// Open a dropdown and capture again</span>
+  <span class="kw">await</span> page.<span class="fn">click</span>(<span class="str">'[data-testid="action-btn"]'</span>);
+  <span class="kw">await</span> boxy.<span class="fn">capture</span>(page, {
+    name: <span class="str">'action-menu-open'</span>,
+    scope: <span class="str">'[data-testid="app"]'</span>
+  });
+
+  <span class="cmt">// Print issues and fail if any errors</span>
+  boxy.<span class="fn">report</span>();
+  <span class="fn">expect</span>(boxy.<span class="fn">hasErrors</span>()).<span class="fn">toBe</span>(<span class="kw">false</span>);
+});
+    </div>
+  </div>
+
+  <div class="usage-step">
+    <div class="usage-step-header">
+      <span class="usage-step-num">3</span>
+      <span class="usage-step-title">Save baseline (first run)</span>
+    </div>
+    <div class="code-block">
+<span class="dollar">$</span> LAYOUT_BASELINE=true npx playwright test
+<span class="cmt"># Saves spatial snapshots to .boxy/baseline/</span>
+    </div>
+  </div>
+
+  <div class="usage-step">
+    <div class="usage-step-header">
+      <span class="usage-step-num">4</span>
+      <span class="usage-step-title">Catch regressions (subsequent runs)</span>
+    </div>
+    <div class="code-block">
+<span class="dollar">$</span> npx playwright test
+
+<span class="cmt"># Boxy compares against baseline and reports:</span>
+<span class="err">  CLIPPING  Element clipped by parent overflow</span>
+<span class="err">            [data-testid="action-dropdown"]</span>
+<span class="err">            clipped by: [data-testid="table-area"]</span>
+<span class="err">            hidden: bottom 136px, left 134px</span>
+<span class="cmt"></span>
+<span class="err">  POSITION  Element position shifted</span>
+<span class="err">            [data-testid="sidebar-nav"]</span>
+<span class="err">            delta: x+220px</span>
+<span class="cmt"></span>
+<span class="cmt">  CSS CHANGES:</span>
+<span class="css-diff">    overflow: visible &rarr; hidden  (effective)</span>
+<span class="css-diff">    width: 220px &rarr; 0px  (effective)</span>
+    </div>
+  </div>
+</section>
+
+<!-- Footer -->
+<footer class="page-footer">
+  <p>
+    <a href="https://github.com/luptonm/boxy">GitHub</a> &middot;
+    MIT License &middot;
+    Built with Playwright
+  </p>
+</footer>
+
+<script src="demo.js"></script>
+<script src="demo-app.js"></script>
+
+</body>
+</html>

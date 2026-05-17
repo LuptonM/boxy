@@ -102,7 +102,7 @@ async function run() {
   await page.setContent(PAGE_HTML);
 
   const boxy = createBoxy({
-    snapshotDir: path.join(__dirname, '..', '.layout-snapshots'),
+    snapshotDir: path.join(__dirname, '..', '.boxy'),
     allowMissingBaseline: true,
   });
 

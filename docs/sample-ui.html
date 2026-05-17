@@ -1,0 +1,1071 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Boxy — Sample Project View</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --space-1: 4px; --space-2: 8px; --space-3: 12px; --space-4: 16px;
+    --space-5: 20px; --space-6: 24px; --space-8: 32px;
+
+    /* Dark sidebar palette */
+    --sidebar-bg: #131520;
+    --sidebar-hover: rgba(255,255,255,0.06);
+    --sidebar-active: rgba(99,102,241,0.14);
+    --sidebar-text: rgba(255,255,255,0.55);
+    --sidebar-text-bright: rgba(255,255,255,0.92);
+    --sidebar-border: rgba(255,255,255,0.07);
+    --sidebar-badge-bg: rgba(99,102,241,0.2);
+    --sidebar-badge-text: #a5b4fc;
+
+    /* Main content palette */
+    --color-surface: #ffffff;
+    --color-bg: #f6f7f9;
+    --color-border: #e4e7ec;
+    --color-border-light: #f0f1f4;
+    --color-text: #111827;
+    --color-text-secondary: #4b5563;
+    --color-text-muted: #9ca3af;
+    --color-text-placeholder: #9ca3af;
+
+    --color-indigo-50: #eef2ff;
+    --color-indigo-100: #e0e7ff;
+    --color-indigo-500: #6366f1;
+    --color-indigo-600: #4f46e5;
+    --color-indigo-700: #4338ca;
+
+    --color-red-50: #fef2f2;
+    --color-red-100: #fee2e2;
+    --color-red-500: #ef4444;
+    --color-red-600: #dc2626;
+
+    --color-green-50: #ecfdf5;
+    --color-green-100: #d1fae5;
+    --color-green-600: #059669;
+
+    --color-amber-50: #fffbeb;
+    --color-amber-100: #fef3c7;
+    --color-amber-600: #d97706;
+
+    --color-sky-50: #f0f9ff;
+    --color-sky-100: #e0f2fe;
+    --color-sky-600: #0284c7;
+
+    --color-gray-50: #f9fafb;
+    --color-gray-100: #f3f4f6;
+    --color-gray-200: #e5e7eb;
+    --color-gray-800: #1f2937;
+
+    --radius-sm: 6px;
+    --radius-md: 8px;
+    --radius-lg: 10px;
+    --radius-xl: 14px;
+    --radius-full: 9999px;
+
+    --shadow-sm: 0 1px 2px rgba(0,0,0,0.05);
+    --shadow-md: 0 4px 20px rgba(0,0,0,0.08), 0 1px 3px rgba(0,0,0,0.06);
+    --shadow-lg: 0 12px 40px rgba(0,0,0,0.12), 0 2px 6px rgba(0,0,0,0.06);
+
+    --font: 'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    --sidebar-collapsed: 56px;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: var(--font); background: var(--color-bg); height: 100vh; overflow: hidden; color: var(--color-text); -webkit-font-smoothing: antialiased; }
+
+  /* ── Layout ── */
+  .app { display: flex; flex-direction: column; height: 100vh; }
+
+  /* ── SVG icon base ── */
+  .icon-svg { width: 18px; height: 18px; stroke: currentColor; fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; flex-shrink: 0; }
+  .icon-svg-sm { width: 15px; height: 15px; }
+
+  /* ── TopNav ── */
+  .topnav {
+    height: 52px; background: var(--color-surface);
+    border-bottom: 1px solid var(--color-border);
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0 20px; flex-shrink: 0; z-index: 10;
+  }
+  .topnav-left { display: flex; align-items: center; gap: 14px; }
+  .logo {
+    width: 30px; height: 30px;
+    background: linear-gradient(135deg, #6366f1, #8b5cf6);
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    color: white; font-weight: 700; font-size: 14px;
+    box-shadow: 0 2px 8px rgba(99,102,241,0.3);
+  }
+  .breadcrumb { display: flex; align-items: center; gap: 6px; font-size: 14px; color: var(--color-text-secondary); }
+  .breadcrumb-sep { color: var(--color-text-muted); font-size: 12px; }
+  .breadcrumb-current { color: var(--color-text); font-weight: 600; }
+  .topnav-right { display: flex; align-items: center; gap: 4px; }
+  .topnav-btn {
+    width: 34px; height: 34px; border: none; border-radius: var(--radius-md);
+    background: transparent; cursor: pointer;
+    color: var(--color-text-muted); position: relative;
+    display: flex; align-items: center; justify-content: center;
+    transition: all 0.15s;
+  }
+  .topnav-btn:hover { background: var(--color-gray-100); color: var(--color-text-secondary); }
+  .topnav-badge {
+    position: absolute; top: 5px; right: 5px;
+    width: 8px; height: 8px; background: #ef4444;
+    border-radius: var(--radius-full); border: 2px solid var(--color-surface);
+  }
+  .avatar-btn {
+    width: 32px; height: 32px; border-radius: var(--radius-full);
+    background: linear-gradient(135deg, #6366f1, #a78bfa);
+    border: none; cursor: pointer;
+    color: white; font-weight: 600; font-size: 12px;
+    letter-spacing: 0.02em;
+    margin-left: 6px;
+  }
+
+  /* ── Notification Dropdown ── */
+  .notif-dropdown {
+    position: absolute; top: calc(100% + 8px); right: 0;
+    width: 380px; max-height: 480px; background: var(--color-surface);
+    border: 1px solid var(--color-border); border-radius: var(--radius-xl);
+    box-shadow: var(--shadow-lg); z-index: 1000; display: none;
+    overflow-y: auto;
+  }
+  .notif-dropdown.open { display: block; }
+  .notif-header {
+    padding: 14px 16px; border-bottom: 1px solid var(--color-border);
+    display: flex; justify-content: space-between; align-items: center;
+    position: sticky; top: 0; background: var(--color-surface);
+    border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+  }
+  .notif-header h3 { font-size: 14px; font-weight: 600; color: var(--color-text); }
+  .notif-mark-read { font-size: 12px; color: var(--color-indigo-600); cursor: pointer; background: none; border: none; font-weight: 500; font-family: var(--font); }
+  .notif-mark-read:hover { text-decoration: underline; }
+  .notif-item {
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--color-border-light);
+    display: flex; gap: 12px; cursor: pointer;
+    transition: background 0.12s;
+  }
+  .notif-item:hover { background: var(--color-gray-50); }
+  .notif-icon {
+    width: 34px; height: 34px; border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+  .notif-icon.info { background: var(--color-indigo-50); color: var(--color-indigo-600); }
+  .notif-icon.success { background: var(--color-green-50); color: var(--color-green-600); }
+  .notif-icon.warning { background: var(--color-amber-50); color: var(--color-amber-600); }
+  .notif-icon.error { background: var(--color-red-50); color: var(--color-red-600); }
+  .notif-body { flex: 1; min-width: 0; }
+  .notif-title { font-size: 13px; font-weight: 600; color: var(--color-text); line-height: 1.3; }
+  .notif-msg { font-size: 12px; color: var(--color-text-secondary); margin-top: 2px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; line-height: 1.4; }
+  .notif-meta { font-size: 11px; color: var(--color-text-muted); margin-top: 4px; }
+  .notif-unread { width: 8px; height: 8px; background: var(--color-indigo-500); border-radius: var(--radius-full); flex-shrink: 0; margin-top: 5px; }
+  .notif-footer { padding: 12px 16px; text-align: center; }
+  .notif-footer a { font-size: 13px; color: var(--color-indigo-600); text-decoration: none; font-weight: 500; }
+  .notif-footer a:hover { text-decoration: underline; }
+
+  /* ── Body ── */
+  .body { display: flex; flex: 1; overflow: hidden; }
+
+  /* ── Sidebar ── */
+  .sidebar {
+    width: var(--sidebar-width, 240px);
+    background: var(--sidebar-bg);
+    display: flex; flex-direction: column; flex-shrink: 0;
+    transition: width 0.2s ease; overflow: visible;
+  }
+  .sidebar.collapsed { width: var(--sidebar-collapsed, 56px); }
+  .sidebar-header {
+    padding: 14px 16px; display: flex;
+    align-items: center; justify-content: space-between;
+    border-bottom: 1px solid var(--sidebar-border);
+    min-height: 52px;
+  }
+  .sidebar-title {
+    font-size: 13px; font-weight: 600;
+    color: var(--sidebar-text-bright);
+    white-space: nowrap; overflow: hidden;
+    letter-spacing: 0.01em;
+  }
+  .sidebar.collapsed .sidebar-title { display: none; }
+  .sidebar-toggle {
+    width: 26px; height: 26px;
+    border: 1px solid var(--sidebar-border);
+    border-radius: var(--radius-sm);
+    background: transparent;
+    cursor: pointer; color: var(--sidebar-text);
+    flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    transition: all 0.15s;
+  }
+  .sidebar-toggle:hover { background: var(--sidebar-hover); color: var(--sidebar-text-bright); }
+  .sidebar-nav { padding: 8px; flex: 1; overflow-y: auto; }
+  .nav-item {
+    display: flex; align-items: center; gap: 10px;
+    padding: 7px 10px; border-radius: var(--radius-md);
+    font-size: 13px; color: var(--sidebar-text);
+    cursor: pointer; white-space: nowrap;
+    border-left: 2px solid transparent;
+    position: relative;
+    transition: all 0.12s;
+    margin-bottom: 1px;
+    font-weight: 500;
+  }
+  .nav-item:hover { background: var(--sidebar-hover); color: var(--sidebar-text-bright); }
+  .nav-item.active {
+    background: var(--sidebar-active);
+    color: #a5b4fc;
+    border-left-color: #818cf8;
+    font-weight: 600;
+  }
+  .nav-icon { width: 18px; height: 18px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; }
+  .nav-label { overflow: hidden; }
+  .sidebar.collapsed .nav-label { display: none; }
+  .nav-badge {
+    margin-left: auto; font-size: 11px;
+    background: var(--sidebar-badge-bg);
+    color: var(--sidebar-badge-text);
+    padding: 1px 7px; border-radius: var(--radius-full); font-weight: 600;
+  }
+  .sidebar.collapsed .nav-badge { display: none; }
+
+  /* ── Main Content ── */
+  .main { flex: 1; display: flex; flex-direction: column; overflow: hidden; background: var(--color-bg); }
+
+  /* ── Filter Bar ── */
+  .filter-bar {
+    padding: 10px 24px;
+    background: var(--color-surface);
+    border-bottom: 1px solid var(--color-border);
+    display: flex; align-items: center; gap: 10px;
+    flex-shrink: 0;
+  }
+  .filter-chip {
+    display: flex; align-items: center; gap: 5px;
+    padding: 5px 12px; height: 30px;
+    border: 1px solid var(--color-border); border-radius: var(--radius-md);
+    font-size: 13px; color: var(--color-text-secondary);
+    cursor: pointer; background: var(--color-surface);
+    white-space: nowrap; position: relative;
+    transition: all 0.12s; font-weight: 500;
+    font-family: var(--font);
+  }
+  .filter-chip:hover { background: var(--color-gray-50); border-color: var(--color-gray-200); }
+  .filter-chip.active { background: var(--color-indigo-50); border-color: var(--color-indigo-500); color: var(--color-indigo-700); }
+  .filter-chevron { font-size: 10px; opacity: 0.5; }
+
+  /* Filter Popover */
+  .filter-popover {
+    position: absolute; top: calc(100% + 6px); left: 0;
+    min-width: 200px; max-height: 280px;
+    background: var(--color-surface); border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg); box-shadow: var(--shadow-md);
+    z-index: 30; display: none; overflow-y: auto; padding: 4px;
+  }
+  .filter-popover.open { display: block; }
+  .filter-option {
+    display: flex; align-items: center; gap: 8px;
+    padding: 7px 10px; border-radius: var(--radius-sm);
+    font-size: 13px; color: var(--color-text); cursor: pointer;
+    transition: background 0.1s;
+  }
+  .filter-option:hover { background: var(--color-indigo-50); }
+  .filter-option input { accent-color: var(--color-indigo-600); width: 15px; height: 15px; }
+
+  .filter-pills { display: flex; gap: 6px; flex: 1; flex-wrap: wrap; overflow: hidden; }
+  .filter-pill {
+    display: flex; align-items: center; gap: 4px;
+    padding: 3px 10px; height: 24px;
+    border-radius: var(--radius-full); font-size: 12px; font-weight: 500;
+  }
+  .filter-pill.blue { background: var(--color-indigo-100); color: var(--color-indigo-700); }
+  .filter-pill.green { background: var(--color-green-100); color: var(--color-green-600); }
+  .filter-pill.amber { background: var(--color-amber-100); color: var(--color-amber-600); }
+  .filter-pill-clear { cursor: pointer; font-size: 10px; opacity: 0.5; transition: opacity 0.1s; }
+  .filter-pill-clear:hover { opacity: 1; }
+  .filter-result-count { font-size: 12px; color: var(--color-text-muted); white-space: nowrap; margin-left: auto; font-weight: 500; }
+
+  /* ── Data Table ── */
+  .table-area { flex: 1; overflow: auto; background: var(--color-surface); border-radius: 0; }
+  .data-table { width: 100%; border-collapse: collapse; }
+  .data-table thead { position: sticky; top: 0; z-index: 5; }
+  .data-table th {
+    text-align: left; padding: 10px 16px;
+    font-size: 11px; font-weight: 600; color: var(--color-text-muted);
+    text-transform: uppercase; letter-spacing: 0.06em;
+    background: var(--color-gray-50); border-bottom: 1px solid var(--color-border);
+    white-space: nowrap; position: relative; cursor: pointer;
+    transition: color 0.12s;
+  }
+  .data-table th:hover { color: var(--color-text-secondary); }
+  .th-sort-icon { font-size: 10px; margin-left: 3px; opacity: 0.4; }
+  .data-table td {
+    padding: 11px 16px; font-size: 13px;
+    color: var(--color-text); border-bottom: 1px solid var(--color-border-light);
+    max-width: 300px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+  .data-table tbody tr { transition: background 0.1s; cursor: pointer; }
+  .data-table tbody tr:hover td { background: var(--color-gray-50); }
+
+  /* Title column styling */
+  .row-title { font-weight: 500; color: var(--color-text); }
+
+  /* Assignee with avatar */
+  .assignee-cell { display: flex; align-items: center; gap: 8px; }
+  .assignee-avatar {
+    width: 24px; height: 24px; border-radius: var(--radius-full);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 10px; font-weight: 700; color: white; flex-shrink: 0;
+    letter-spacing: 0.02em;
+  }
+  .avatar-ml { background: linear-gradient(135deg, #6366f1, #a78bfa); }
+  .avatar-sc { background: linear-gradient(135deg, #059669, #34d399); }
+  .avatar-jw { background: linear-gradient(135deg, #d97706, #fbbf24); }
+
+  /* Linked docs */
+  .linked-count { display: flex; align-items: center; gap: 4px; color: var(--color-text-secondary); }
+
+  .badge {
+    display: inline-flex; align-items: center; padding: 2px 10px; border-radius: var(--radius-full);
+    font-size: 11px; font-weight: 600; letter-spacing: 0.01em;
+  }
+  .badge-open { background: var(--color-sky-50); color: var(--color-sky-600); }
+  .badge-closed { background: var(--color-gray-100); color: var(--color-gray-800); }
+  .badge-critical { background: var(--color-red-50); color: var(--color-red-600); }
+  .badge-warning { background: var(--color-amber-50); color: var(--color-amber-600); }
+  .badge-low { background: var(--color-green-50); color: var(--color-green-600); }
+
+  .row-actions { position: relative; }
+  .row-action-btn {
+    width: 30px; height: 30px; border: 1px solid transparent;
+    border-radius: var(--radius-sm); background: transparent;
+    cursor: pointer; color: var(--color-text-muted);
+    display: flex; align-items: center; justify-content: center;
+    transition: all 0.12s;
+  }
+  .row-action-btn:hover { background: var(--color-gray-100); border-color: var(--color-border); color: var(--color-text-secondary); }
+
+  /* Row Action Dropdown */
+  .row-dropdown {
+    position: absolute; bottom: calc(100% + 4px); right: 0;
+    min-width: 180px; background: var(--color-surface);
+    border: 1px solid var(--color-border); border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-lg); z-index: 1000; padding: 4px;
+    display: none;
+  }
+  .row-dropdown.open { display: block; }
+  .row-dropdown a {
+    display: flex; align-items: center; gap: 8px;
+    padding: 7px 10px;
+    border-radius: var(--radius-sm); font-size: 13px;
+    color: var(--color-text); text-decoration: none; cursor: pointer;
+    transition: background 0.1s; font-weight: 500;
+  }
+  .row-dropdown a:hover { background: var(--color-gray-50); }
+  .row-dropdown a.danger { color: var(--color-red-600); }
+  .row-dropdown a.danger:hover { background: var(--color-red-50); }
+  .row-dropdown-divider { height: 1px; background: var(--color-border-light); margin: 4px 0; }
+
+  /* ── Detail Panel ── */
+  .detail-panel {
+    width: 420px; background: var(--color-surface);
+    border-left: 1px solid var(--color-border);
+    display: flex; flex-direction: column; flex-shrink: 0;
+    display: none; overflow: visible;
+  }
+  .detail-panel.open { display: flex; }
+  .detail-header {
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--color-border);
+    display: flex; align-items: flex-start; justify-content: space-between;
+  }
+  .detail-header h3 { font-size: 15px; font-weight: 600; color: var(--color-text); line-height: 1.4; }
+  .detail-close {
+    width: 28px; height: 28px; border: none; border-radius: var(--radius-sm);
+    background: transparent; cursor: pointer;
+    color: var(--color-text-muted);
+    display: flex; align-items: center; justify-content: center;
+    transition: all 0.12s;
+  }
+  .detail-close:hover { background: var(--color-gray-100); color: var(--color-text); }
+  .detail-tabs {
+    display: flex;
+    border-bottom: 1px solid var(--color-border);
+    background: var(--color-surface);
+    padding: 0 20px;
+    gap: 0;
+  }
+  .detail-tab {
+    padding: 10px 0; margin-right: 20px; font-size: 13px;
+    color: var(--color-text-muted); cursor: pointer;
+    background: none; border: none; border-bottom: 2px solid transparent;
+    transition: all 0.12s; font-weight: 500; font-family: var(--font);
+  }
+  .detail-tab:hover { color: var(--color-text-secondary); }
+  .detail-tab.active { color: var(--color-indigo-600); border-bottom-color: var(--color-indigo-600); font-weight: 600; }
+  .detail-tab .tab-badge {
+    display: inline-flex; min-width: 18px; height: 18px;
+    align-items: center; justify-content: center;
+    border-radius: var(--radius-full); font-size: 10px;
+    font-weight: 700; margin-left: 6px;
+    background: var(--color-gray-100); color: var(--color-text-muted);
+  }
+  .detail-tab.active .tab-badge { background: var(--color-indigo-100); color: var(--color-indigo-700); }
+  .detail-body { flex: 1; overflow-y: auto; padding: 20px; }
+  .detail-section { margin-bottom: 24px; }
+  .detail-section h4 {
+    font-size: 11px; font-weight: 700; color: var(--color-text-muted);
+    text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 12px;
+  }
+  .detail-field { margin-bottom: 12px; }
+  .detail-field-label { font-size: 12px; color: var(--color-text-muted); margin-bottom: 3px; font-weight: 500; }
+  .detail-field-value { font-size: 13px; color: var(--color-text); }
+  .detail-footer {
+    padding: 12px 20px;
+    border-top: 1px solid var(--color-border);
+    display: flex; gap: 8px; justify-content: flex-end;
+  }
+  .btn {
+    padding: 7px 16px; border-radius: var(--radius-md);
+    font-size: 13px; font-weight: 600; cursor: pointer; border: none;
+    transition: all 0.12s; font-family: var(--font);
+  }
+  .btn-ghost { background: transparent; color: var(--color-text-secondary); }
+  .btn-ghost:hover { background: var(--color-gray-100); }
+  .btn-primary { background: var(--color-indigo-600); color: white; }
+  .btn-primary:hover { background: var(--color-indigo-700); box-shadow: 0 2px 8px rgba(79,70,229,0.3); }
+
+  /* ── Modal ── */
+  .modal-overlay {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.25);
+    backdrop-filter: blur(4px);
+    display: flex; align-items: center; justify-content: center;
+    z-index: 2000; display: none;
+  }
+  .modal-overlay.open { display: flex; }
+  .modal {
+    background: var(--color-surface); border-radius: var(--radius-xl);
+    width: 520px; max-height: calc(100vh - 64px);
+    box-shadow: 0 24px 60px rgba(0,0,0,0.2), 0 0 0 1px rgba(0,0,0,0.05);
+    display: flex; flex-direction: column;
+    overflow: visible;
+  }
+  .modal-header {
+    padding: 20px 24px;
+    border-bottom: 1px solid var(--color-border);
+    display: flex; justify-content: space-between; align-items: center;
+  }
+  .modal-header h2 { font-size: 17px; font-weight: 700; color: var(--color-text); }
+  .modal-close {
+    width: 30px; height: 30px; border: none; border-radius: var(--radius-sm);
+    background: transparent; cursor: pointer;
+    color: var(--color-text-muted);
+    display: flex; align-items: center; justify-content: center;
+    transition: all 0.12s;
+  }
+  .modal-close:hover { background: var(--color-gray-100); color: var(--color-text); }
+  .modal-body { padding: 24px; flex: 1; overflow-y: auto; }
+  .modal-footer {
+    padding: 16px 24px;
+    border-top: 1px solid var(--color-border);
+    display: flex; justify-content: flex-end; gap: 8px;
+  }
+
+  .form-group { margin-bottom: 16px; }
+  .form-group label {
+    display: block; font-size: 13px; font-weight: 600;
+    color: var(--color-text-secondary); margin-bottom: 6px;
+  }
+  .form-group input, .form-group textarea {
+    width: 100%; padding: 8px 12px;
+    border: 1px solid var(--color-border); border-radius: var(--radius-md);
+    font-size: 13px; font-family: var(--font);
+    color: var(--color-text);
+    transition: border-color 0.15s, box-shadow 0.15s;
+    background: var(--color-surface);
+  }
+  .form-group input:focus, .form-group textarea:focus {
+    outline: none;
+    border-color: var(--color-indigo-500);
+    box-shadow: 0 0 0 3px rgba(99,102,241,0.1);
+  }
+  .form-group input::placeholder, .form-group textarea::placeholder { color: var(--color-text-placeholder); }
+  .form-group textarea { min-height: 80px; resize: vertical; line-height: 1.5; }
+
+  /* Select inside modal */
+  .form-select-wrapper { position: relative; }
+  .form-select-trigger {
+    width: 100%; padding: 8px 12px;
+    border: 1px solid var(--color-border); border-radius: var(--radius-md);
+    font-size: 13px; background: var(--color-surface); cursor: pointer;
+    display: flex; justify-content: space-between; align-items: center;
+    color: var(--color-text); font-family: var(--font);
+    transition: border-color 0.15s;
+  }
+  .form-select-trigger:hover { border-color: var(--color-gray-200); }
+  .form-select-trigger.placeholder { color: var(--color-text-placeholder); }
+  .form-select-panel {
+    position: absolute; top: calc(100% + 4px); left: 0; right: 0;
+    background: var(--color-surface); border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg); box-shadow: var(--shadow-md);
+    z-index: 2100; display: none; padding: 4px;
+    max-height: 200px; overflow-y: auto;
+  }
+  .form-select-panel.open { display: block; }
+  .form-select-option {
+    padding: 8px 10px; border-radius: var(--radius-sm);
+    font-size: 13px; color: var(--color-text); cursor: pointer;
+    display: flex; align-items: center; gap: 8px;
+    transition: background 0.1s; font-weight: 500;
+  }
+  .form-select-option:hover { background: var(--color-indigo-50); }
+  .form-select-option.selected { font-weight: 600; color: var(--color-indigo-700); }
+  .form-select-radio {
+    width: 16px; height: 16px; border: 2px solid var(--color-gray-200);
+    border-radius: var(--radius-full); flex-shrink: 0;
+    transition: all 0.12s;
+  }
+  .form-select-option.selected .form-select-radio {
+    border-color: var(--color-indigo-600);
+    box-shadow: inset 0 0 0 3.5px var(--color-indigo-600);
+  }
+
+  /* ── Pagination ── */
+  .pagination {
+    padding: 10px 24px;
+    border-top: 1px solid var(--color-border);
+    display: flex; align-items: center; justify-content: space-between;
+    background: var(--color-surface); flex-shrink: 0;
+  }
+  .pagination-info { font-size: 13px; color: var(--color-text-muted); font-weight: 500; }
+  .pagination-btns { display: flex; gap: 4px; }
+  .pagination-btn {
+    padding: 5px 12px; border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm); font-size: 13px; background: var(--color-surface);
+    color: var(--color-text-secondary); cursor: pointer; font-weight: 500;
+    transition: all 0.12s; font-family: var(--font);
+  }
+  .pagination-btn:hover { background: var(--color-gray-50); border-color: var(--color-gray-200); }
+  .pagination-btn.active { background: var(--color-indigo-600); color: white; border-color: var(--color-indigo-600); }
+
+  /* ── Timestamp styling ── */
+  .timestamp { color: var(--color-text-muted); font-size: 13px; }
+
+  /* ── Linked doc file icon styling ── */
+  .linked-doc-card {
+    padding: 10px 14px; background: var(--color-gray-50);
+    border: 1px solid var(--color-border-light);
+    border-radius: var(--radius-md); font-size: 13px; color: var(--color-text);
+    display: flex; align-items: center; gap: 10px;
+    transition: background 0.12s;
+  }
+  .linked-doc-card:hover { background: var(--color-gray-100); }
+  .linked-doc-icon { color: var(--color-text-muted); flex-shrink: 0; }
+
+  /* ── Boxy highlight ── */
+  .boxy-highlight {
+    outline: 2px dashed #ef4444 !important;
+    outline-offset: 1px;
+    position: relative;
+  }
+</style>
+</head>
+<body>
+
+<div class="app" data-testid="app">
+  <!-- TopNav -->
+  <header class="topnav" data-testid="topnav">
+    <div class="topnav-left">
+      <div class="logo">B</div>
+      <nav class="breadcrumb">
+        <span>Workspace</span>
+        <span class="breadcrumb-sep">
+          <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M4.5 2.5L7.5 6L4.5 9.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </span>
+        <span>Acme Project</span>
+        <span class="breadcrumb-sep">
+          <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M4.5 2.5L7.5 6L4.5 9.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </span>
+        <span class="breadcrumb-current">Issues</span>
+      </nav>
+    </div>
+    <div class="topnav-right">
+      <button class="topnav-btn" data-testid="search-btn" title="Search">
+        <svg class="icon-svg" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.35-4.35"/></svg>
+      </button>
+      <div class="topnav-btn" data-testid="notif-btn" title="Notifications" role="button" tabindex="0">
+        <svg class="icon-svg" viewBox="0 0 24 24"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>
+        <span class="topnav-badge"></span>
+        <div class="notif-dropdown" data-testid="notif-dropdown">
+          <div class="notif-header">
+            <h3>Notifications</h3>
+            <button class="notif-mark-read">Mark all read</button>
+          </div>
+          <div class="notif-item">
+            <div class="notif-icon info">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+            </div>
+            <div class="notif-body">
+              <div class="notif-title">Extraction complete</div>
+              <div class="notif-msg">12 entities found in "Witness Statement - Dr. Patel"</div>
+              <div class="notif-meta">Smith v Jones &middot; 2 min ago</div>
+            </div>
+            <div class="notif-unread"></div>
+          </div>
+          <div class="notif-item">
+            <div class="notif-icon success">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+            </div>
+            <div class="notif-body">
+              <div class="notif-title">Document uploaded</div>
+              <div class="notif-msg">Expert report has been added to bundle "Medical Evidence"</div>
+              <div class="notif-meta">Smith v Jones &middot; 15 min ago</div>
+            </div>
+            <div class="notif-unread"></div>
+          </div>
+          <div class="notif-item">
+            <div class="notif-icon warning">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+            </div>
+            <div class="notif-body">
+              <div class="notif-title">Deadline approaching</div>
+              <div class="notif-msg">Response to Part 18 questions due in 3 days</div>
+              <div class="notif-meta">Smith v Jones &middot; 1 hr ago</div>
+            </div>
+          </div>
+          <div class="notif-item">
+            <div class="notif-icon error">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+            </div>
+            <div class="notif-body">
+              <div class="notif-title">OCR failed</div>
+              <div class="notif-msg">Could not process "Handwritten notes - 14 March"</div>
+              <div class="notif-meta">Smith v Jones &middot; 3 hrs ago</div>
+            </div>
+          </div>
+          <div class="notif-footer"><a href="#">View all notifications</a></div>
+        </div>
+      </div>
+      <div class="avatar-btn" data-testid="avatar-btn">AT</div>
+    </div>
+  </header>
+
+  <div class="body">
+    <!-- Sidebar -->
+    <aside class="sidebar" data-testid="sidebar">
+      <div class="sidebar-header">
+        <span class="sidebar-title">Acme Project</span>
+        <button class="sidebar-toggle" data-testid="sidebar-toggle">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="11 17 6 12 11 7"/><polyline points="18 17 13 12 18 7"/></svg>
+        </button>
+      </div>
+      <nav class="sidebar-nav" data-testid="sidebar-nav">
+        <div class="nav-item" data-testid="nav-dashboard">
+          <span class="nav-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg></span>
+          <span class="nav-label">Home</span>
+        </div>
+        <div class="nav-item" data-testid="nav-documents">
+          <span class="nav-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/></svg></span>
+          <span class="nav-label">Files</span>
+          <span class="nav-badge">24</span>
+        </div>
+        <div class="nav-item" data-testid="nav-entities">
+          <span class="nav-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></span>
+          <span class="nav-label">Team</span>
+        </div>
+        <div class="nav-item active" data-testid="nav-issues">
+          <span class="nav-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg></span>
+          <span class="nav-label">Issues</span>
+          <span class="nav-badge">8</span>
+        </div>
+        <div class="nav-item" data-testid="nav-timeline">
+          <span class="nav-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></span>
+          <span class="nav-label">Activity</span>
+        </div>
+        <div class="nav-item" data-testid="nav-evidence">
+          <span class="nav-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></span>
+          <span class="nav-label">Search</span>
+        </div>
+        <div class="nav-item" data-testid="nav-bundles">
+          <span class="nav-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg></span>
+          <span class="nav-label">Reports</span>
+        </div>
+        <div class="nav-item" data-testid="nav-drafting">
+          <span class="nav-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></span>
+          <span class="nav-label">Notes</span>
+        </div>
+        <div class="nav-item" data-testid="nav-schedule">
+          <span class="nav-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></span>
+          <span class="nav-label">Billing</span>
+        </div>
+      </nav>
+    </aside>
+
+    <!-- Main Content -->
+    <div class="main" data-testid="main">
+      <!-- Filter Bar -->
+      <div class="filter-bar" data-testid="filter-bar">
+        <div class="filter-chip" data-testid="filter-status">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/></svg>
+          Status <span class="filter-chevron">&#9662;</span>
+          <div class="filter-popover" data-testid="filter-status-popover">
+            <label class="filter-option"><input type="checkbox" checked> Open</label>
+            <label class="filter-option"><input type="checkbox" checked> In Progress</label>
+            <label class="filter-option"><input type="checkbox"> Closed</label>
+            <label class="filter-option"><input type="checkbox"> Archived</label>
+          </div>
+        </div>
+        <div class="filter-chip" data-testid="filter-priority">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+          Priority <span class="filter-chevron">&#9662;</span>
+          <div class="filter-popover" data-testid="filter-priority-popover">
+            <label class="filter-option"><input type="checkbox"> Critical</label>
+            <label class="filter-option"><input type="checkbox"> High</label>
+            <label class="filter-option"><input type="checkbox" checked> Medium</label>
+            <label class="filter-option"><input type="checkbox"> Low</label>
+          </div>
+        </div>
+        <div class="filter-chip" data-testid="filter-assignee">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+          Assignee <span class="filter-chevron">&#9662;</span>
+          <div class="filter-popover" data-testid="filter-assignee-popover">
+            <label class="filter-option"><input type="checkbox"> Alex Turner</label>
+            <label class="filter-option"><input type="checkbox"> Sarah Chen</label>
+            <label class="filter-option"><input type="checkbox"> James Wilson</label>
+          </div>
+        </div>
+        <div class="filter-pills">
+          <span class="filter-pill blue">Open <span class="filter-pill-clear">&times;</span></span>
+          <span class="filter-pill blue">In Progress <span class="filter-pill-clear">&times;</span></span>
+          <span class="filter-pill amber">Medium <span class="filter-pill-clear">&times;</span></span>
+        </div>
+        <span class="filter-result-count">8 results</span>
+      </div>
+
+      <!-- Table -->
+      <div class="table-area" data-testid="table-area">
+        <table class="data-table" data-testid="data-table">
+          <thead>
+            <tr>
+              <th data-testid="th-title">Title <span class="th-sort-icon">&#9650;</span></th>
+              <th data-testid="th-status">Status</th>
+              <th data-testid="th-priority">Priority</th>
+              <th data-testid="th-assignee">Assignee</th>
+              <th data-testid="th-linked">Docs</th>
+              <th data-testid="th-updated">Updated</th>
+              <th style="width:48px"></th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr data-testid="row-1">
+              <td><span class="row-title">Causation gap in medical evidence</span></td>
+              <td><span class="badge badge-open">Open</span></td>
+              <td><span class="badge badge-critical">Critical</span></td>
+              <td>Alex Turner</td>
+              <td><span class="linked-count"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/></svg> 3</span></td>
+              <td><span class="timestamp">2 hrs ago</span></td>
+              <td><div class="row-actions"><button class="row-action-btn" data-testid="action-btn-1"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="12" cy="5" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="12" cy="19" r="1"/></svg></button><div class="row-dropdown" data-testid="action-dropdown-1"><a href="#">View details</a><a href="#">Edit</a><a href="#">Link document</a><div class="row-dropdown-divider"></div><a href="#" class="danger">Archive</a></div></div></td>
+            </tr>
+            <tr data-testid="row-2">
+              <td><span class="row-title">Inconsistent witness testimony on timeline</span></td>
+              <td><span class="badge badge-open">Open</span></td>
+              <td><span class="badge badge-critical">Critical</span></td>
+              <td>Sarah Chen</td>
+              <td><span class="linked-count"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/></svg> 5</span></td>
+              <td><span class="timestamp">4 hrs ago</span></td>
+              <td><div class="row-actions"><button class="row-action-btn" data-testid="action-btn-2"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="12" cy="5" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="12" cy="19" r="1"/></svg></button><div class="row-dropdown" data-testid="action-dropdown-2"><a href="#">View details</a><a href="#">Edit</a><a href="#">Link document</a><div class="row-dropdown-divider"></div><a href="#" class="danger">Archive</a></div></div></td>
+            </tr>
+            <tr data-testid="row-3">
+              <td><span class="row-title">Missing disclosure: defendant's financial records</span></td>
+              <td><span class="badge badge-open">Open</span></td>
+              <td><span class="badge badge-warning">High</span></td>
+              <td>Alex Turner</td>
+              <td><span class="linked-count"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/></svg> 1</span></td>
+              <td><span class="timestamp">1 day ago</span></td>
+              <td><div class="row-actions"><button class="row-action-btn" data-testid="action-btn-3"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="12" cy="5" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="12" cy="19" r="1"/></svg></button><div class="row-dropdown" data-testid="action-dropdown-3"><a href="#">View details</a><a href="#">Edit</a><a href="#">Link document</a><div class="row-dropdown-divider"></div><a href="#" class="danger">Archive</a></div></div></td>
+            </tr>
+            <tr data-testid="row-4">
+              <td><span class="row-title">Expert report contradicts treating physician</span></td>
+              <td><span class="badge badge-open">Open</span></td>
+              <td><span class="badge badge-warning">High</span></td>
+              <td>James Wilson</td>
+              <td><span class="linked-count"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/></svg> 2</span></td>
+              <td><span class="timestamp">2 days ago</span></td>
+              <td><div class="row-actions"><button class="row-action-btn" data-testid="action-btn-4"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="12" cy="5" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="12" cy="19" r="1"/></svg></button><div class="row-dropdown" data-testid="action-dropdown-4"><a href="#">View details</a><a href="#">Edit</a><a href="#">Link document</a><div class="row-dropdown-divider"></div><a href="#" class="danger">Archive</a></div></div></td>
+            </tr>
+            <tr data-testid="row-5">
+              <td><span class="row-title">Limitation period calculation needs review</span></td>
+              <td><span class="badge badge-open">Open</span></td>
+              <td><span class="badge badge-low">Medium</span></td>
+              <td>Sarah Chen</td>
+              <td><span class="linked-count"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/></svg> 4</span></td>
+              <td><span class="timestamp">3 days ago</span></td>
+              <td><div class="row-actions"><button class="row-action-btn" data-testid="action-btn-5"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="12" cy="5" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="12" cy="19" r="1"/></svg></button><div class="row-dropdown" data-testid="action-dropdown-5"><a href="#">View details</a><a href="#">Edit</a><a href="#">Link document</a><div class="row-dropdown-divider"></div><a href="#" class="danger">Archive</a></div></div></td>
+            </tr>
+            <tr data-testid="row-6">
+              <td><span class="row-title">Quantum assessment for future care costs</span></td>
+              <td><span class="badge badge-open">Open</span></td>
+              <td><span class="badge badge-low">Medium</span></td>
+              <td>Alex Turner</td>
+              <td><span class="linked-count"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/></svg> 2</span></td>
+              <td><span class="timestamp">5 days ago</span></td>
+              <td><div class="row-actions"><button class="row-action-btn" data-testid="action-btn-6"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="12" cy="5" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="12" cy="19" r="1"/></svg></button><div class="row-dropdown" data-testid="action-dropdown-6"><a href="#">View details</a><a href="#">Edit</a><a href="#">Link document</a><div class="row-dropdown-divider"></div><a href="#" class="danger">Archive</a></div></div></td>
+            </tr>
+            <tr data-testid="row-7">
+              <td><span class="row-title">Without prejudice correspondence review</span></td>
+              <td><span class="badge badge-open">Open</span></td>
+              <td><span class="badge badge-low">Low</span></td>
+              <td>James Wilson</td>
+              <td><span class="linked-count"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/></svg> 7</span></td>
+              <td><span class="timestamp">1 week ago</span></td>
+              <td><div class="row-actions"><button class="row-action-btn" data-testid="action-btn-7"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="12" cy="5" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="12" cy="19" r="1"/></svg></button><div class="row-dropdown" data-testid="action-dropdown-7"><a href="#">View details</a><a href="#">Edit</a><a href="#">Link document</a><div class="row-dropdown-divider"></div><a href="#" class="danger">Archive</a></div></div></td>
+            </tr>
+            <tr data-testid="row-8">
+              <td><span class="row-title">Part 36 offer strategy analysis</span></td>
+              <td><span class="badge badge-open">Open</span></td>
+              <td><span class="badge badge-low">Low</span></td>
+              <td>Sarah Chen</td>
+              <td><span class="linked-count"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/></svg> 3</span></td>
+              <td><span class="timestamp">1 week ago</span></td>
+              <td><div class="row-actions"><button class="row-action-btn" data-testid="action-btn-8"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="12" cy="5" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="12" cy="19" r="1"/></svg></button><div class="row-dropdown" data-testid="action-dropdown-8"><a href="#">View details</a><a href="#">Edit</a><a href="#">Link document</a><div class="row-dropdown-divider"></div><a href="#" class="danger">Archive</a></div></div></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Pagination -->
+      <div class="pagination" data-testid="pagination">
+        <span class="pagination-info">Showing 1&ndash;8 of 8</span>
+        <div class="pagination-btns">
+          <button class="pagination-btn">Prev</button>
+          <button class="pagination-btn active">1</button>
+          <button class="pagination-btn">Next</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Detail Panel (initially hidden) -->
+    <div class="detail-panel" data-testid="detail-panel">
+      <div class="detail-header">
+        <h3>Causation gap in medical evidence</h3>
+        <button class="detail-close" data-testid="detail-close">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+      <div class="detail-tabs">
+        <button class="detail-tab active" data-testid="tab-overview">Overview</button>
+        <button class="detail-tab" data-testid="tab-evidence">Evidence <span class="tab-badge">3</span></button>
+        <button class="detail-tab" data-testid="tab-notes">Notes <span class="tab-badge">5</span></button>
+      </div>
+      <div class="detail-body" data-testid="detail-body">
+        <div class="detail-section">
+          <h4>Details</h4>
+          <div class="detail-field">
+            <div class="detail-field-label">Status</div>
+            <div class="detail-field-value"><span class="badge badge-open">Open</span></div>
+          </div>
+          <div class="detail-field">
+            <div class="detail-field-label">Priority</div>
+            <div class="detail-field-value"><span class="badge badge-critical">Critical</span></div>
+          </div>
+          <div class="detail-field">
+            <div class="detail-field-label">Assignee</div>
+            <div class="detail-field-value">Alex Turner</div>
+          </div>
+          <div class="detail-field">
+            <div class="detail-field-label">Created</div>
+            <div class="detail-field-value">14 May 2026</div>
+          </div>
+        </div>
+        <div class="detail-section">
+          <h4>Description</h4>
+          <p style="font-size:13px;color:var(--color-text);line-height:1.65">
+            The claimant's medical evidence does not clearly establish a causal link between the accident and the reported condition. Dr. Patel's report states the condition "may have been" pre-existing, while the treating physician's notes from March 2025 reference the accident as the direct cause. This inconsistency needs to be resolved before trial, potentially through a joint expert report or further medical examination.
+          </p>
+        </div>
+        <div class="detail-section">
+          <h4>Linked Documents</h4>
+          <div style="display:flex;flex-direction:column;gap:6px">
+            <div class="linked-doc-card">
+              <span class="linked-doc-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/></svg></span>
+              Dr. Patel &mdash; Expert Report (March 2026)
+            </div>
+            <div class="linked-doc-card">
+              <span class="linked-doc-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/></svg></span>
+              GP Notes &mdash; Treating Physician (2024&ndash;2025)
+            </div>
+            <div class="linked-doc-card">
+              <span class="linked-doc-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/></svg></span>
+              Accident Report &mdash; 12 Sept 2024
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="detail-footer">
+        <button class="btn btn-ghost">Close</button>
+        <button class="btn btn-primary">Edit Issue</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal (hidden) -->
+  <div class="modal-overlay" data-testid="modal-overlay">
+    <div class="modal" data-testid="modal">
+      <div class="modal-header">
+        <h2>New Issue</h2>
+        <button class="modal-close" data-testid="modal-close">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label>Title</label>
+          <input type="text" placeholder="Brief description of the issue" data-testid="form-title">
+        </div>
+        <div class="form-group">
+          <label>Description</label>
+          <textarea placeholder="Detailed explanation..." data-testid="form-desc"></textarea>
+        </div>
+        <div class="form-group">
+          <label>Priority</label>
+          <div class="form-select-wrapper" data-testid="form-priority-select">
+            <div class="form-select-trigger placeholder" data-testid="form-priority-trigger">
+              <span>Select priority</span>
+              <span class="filter-chevron">&#9662;</span>
+            </div>
+            <div class="form-select-panel" data-testid="form-priority-panel">
+              <div class="form-select-option" data-value="critical"><span class="form-select-radio"></span> Critical</div>
+              <div class="form-select-option" data-value="high"><span class="form-select-radio"></span> High</div>
+              <div class="form-select-option" data-value="medium"><span class="form-select-radio"></span> Medium</div>
+              <div class="form-select-option" data-value="low"><span class="form-select-radio"></span> Low</div>
+            </div>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Assignee</label>
+          <div class="form-select-wrapper" data-testid="form-assignee-select">
+            <div class="form-select-trigger placeholder" data-testid="form-assignee-trigger">
+              <span>Select assignee</span>
+              <span class="filter-chevron">&#9662;</span>
+            </div>
+            <div class="form-select-panel" data-testid="form-assignee-panel">
+              <div class="form-select-option" data-value="marc"><span class="form-select-radio"></span> Alex Turner</div>
+              <div class="form-select-option" data-value="sarah"><span class="form-select-radio"></span> Sarah Chen</div>
+              <div class="form-select-option" data-value="james"><span class="form-select-radio"></span> James Wilson</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-ghost" data-testid="modal-cancel">Cancel</button>
+        <button class="btn btn-primary" data-testid="modal-save">Create Issue</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  // Sidebar collapse
+  const sidebar = document.querySelector('[data-testid="sidebar"]');
+  document.querySelector('[data-testid="sidebar-toggle"]').addEventListener('click', () => {
+    sidebar.classList.toggle('collapsed');
+  });
+
+  // Notification dropdown
+  document.querySelector('[data-testid="notif-btn"]').addEventListener('click', e => {
+    e.stopPropagation();
+    document.querySelector('[data-testid="notif-dropdown"]').classList.toggle('open');
+  });
+
+  // Filter chips
+  document.querySelectorAll('.filter-chip').forEach(chip => {
+    chip.addEventListener('click', e => {
+      e.stopPropagation();
+      const popover = chip.querySelector('.filter-popover');
+      document.querySelectorAll('.filter-popover').forEach(p => { if (p !== popover) p.classList.remove('open'); });
+      popover.classList.toggle('open');
+    });
+  });
+
+  // Row action dropdowns
+  document.querySelectorAll('.row-action-btn').forEach(btn => {
+    btn.addEventListener('click', e => {
+      e.stopPropagation();
+      document.querySelectorAll('.row-dropdown').forEach(d => d.classList.remove('open'));
+      btn.nextElementSibling.classList.toggle('open');
+    });
+  });
+
+  // Row click → open detail panel
+  document.querySelectorAll('[data-testid="data-table"] tbody tr').forEach(row => {
+    row.addEventListener('click', e => {
+      if (e.target.closest('.row-actions')) return;
+      document.querySelector('[data-testid="detail-panel"]').classList.add('open');
+    });
+  });
+
+  // Detail panel close
+  document.querySelector('[data-testid="detail-close"]').addEventListener('click', () => {
+    document.querySelector('[data-testid="detail-panel"]').classList.remove('open');
+  });
+
+  // Detail tabs
+  document.querySelectorAll('.detail-tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      document.querySelectorAll('.detail-tab').forEach(t => t.classList.remove('active'));
+      tab.classList.add('active');
+    });
+  });
+
+  // Modal
+  document.querySelectorAll('[data-testid="data-table"] tbody tr td:first-child').forEach(td => {
+    td.addEventListener('dblclick', e => {
+      e.stopPropagation();
+      document.querySelector('[data-testid="modal-overlay"]').classList.add('open');
+    });
+  });
+  document.querySelector('[data-testid="modal-close"]').addEventListener('click', () => {
+    document.querySelector('[data-testid="modal-overlay"]').classList.remove('open');
+  });
+  document.querySelector('[data-testid="modal-cancel"]').addEventListener('click', () => {
+    document.querySelector('[data-testid="modal-overlay"]').classList.remove('open');
+  });
+  document.querySelector('[data-testid="modal-overlay"]').addEventListener('click', e => {
+    if (e.target.classList.contains('modal-overlay')) {
+      document.querySelector('[data-testid="modal-overlay"]').classList.remove('open');
+    }
+  });
+
+  // Select triggers in modal
+  document.querySelectorAll('.form-select-trigger').forEach(trigger => {
+    trigger.addEventListener('click', e => {
+      e.stopPropagation();
+      document.querySelectorAll('.form-select-panel').forEach(p => {
+        if (p !== trigger.nextElementSibling) p.classList.remove('open');
+      });
+      trigger.nextElementSibling.classList.toggle('open');
+    });
+  });
+  document.querySelectorAll('.form-select-option').forEach(opt => {
+    opt.addEventListener('click', () => {
+      const wrapper = opt.closest('.form-select-wrapper');
+      const trigger = wrapper.querySelector('.form-select-trigger');
+      trigger.querySelector('span:first-child').textContent = opt.textContent.trim();
+      trigger.classList.remove('placeholder');
+      wrapper.querySelectorAll('.form-select-option').forEach(o => o.classList.remove('selected'));
+      opt.classList.add('selected');
+      wrapper.querySelector('.form-select-panel').classList.remove('open');
+    });
+  });
+
+  // Close all dropdowns on outside click
+  document.addEventListener('click', () => {
+    document.querySelectorAll('.notif-dropdown, .filter-popover, .row-dropdown, .form-select-panel').forEach(d => d.classList.remove('open'));
+  });
+</script>
+</body>
+</html>

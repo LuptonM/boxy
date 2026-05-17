@@ -31,7 +31,7 @@ let totalWarnings = 0;
 
 if (!SCENARIO || SCENARIO === 'modal') {
   const boxy = createBoxy({
-    snapshotDir: path.join(__dirname, '..', '.layout-snapshots', 'scenario-modal'),
+    snapshotDir: path.join(__dirname, '..', '.boxy', 'scenario-modal'),
     allowMissingBaseline: true,
   });
 
@@ -75,7 +75,7 @@ if (!SCENARIO || SCENARIO === 'modal') {
 
 if (!SCENARIO || SCENARIO === 'dashboard') {
   const boxy = createBoxy({
-    snapshotDir: path.join(__dirname, '..', '.layout-snapshots', 'scenario-dashboard'),
+    snapshotDir: path.join(__dirname, '..', '.boxy', 'scenario-dashboard'),
     allowMissingBaseline: true,
   });
 
@@ -141,7 +141,7 @@ if (!SCENARIO || SCENARIO === 'dashboard') {
 
 if (!SCENARIO || SCENARIO === 'chat') {
   const boxy = createBoxy({
-    snapshotDir: path.join(__dirname, '..', '.layout-snapshots', 'scenario-chat'),
+    snapshotDir: path.join(__dirname, '..', '.boxy', 'scenario-chat'),
     allowMissingBaseline: true,
   });
 

@@ -1,8 +1,10 @@
 # Boxy
 
-Spatial layout linter for Playwright. Catches CSS cascade side-effects — clipped dropdowns, broken overflow, invisible elements, shifted layouts — before they ship.
+Drop-in layout linter for Playwright. Add a few lines to your existing tests to catch clipping, overflow, and CSS regressions automatically.
 
-**Not pixel diffing.** Builds a spatial model of your rendered page and detects broken layout patterns. When something breaks, it tells you *which CSS property changed on which element* caused it — verified by re-rendering with each change in isolation.
+**Not pixel diffing.** Boxy builds a spatial model of your rendered page and detects broken layout patterns. When something breaks, it tells you *which CSS property changed on which element* caused it — verified by re-rendering with each change in isolation.
+
+**[Live demo & docs →](https://luptonm.github.io/boxy/)**
 
 ## The Problem
 
@@ -132,7 +134,7 @@ const result = await boxy.diagnoseCauses(page, 'detail');
 
 ```js
 const boxy = createBoxy({
-  snapshotDir: '.layout-snapshots',    // where to store baselines
+  snapshotDir: '.boxy',    // where to store baselines
   allowMissingBaseline: false,         // fail when baseline is missing (set true for first run)
   config: {
     spacingThreshold: 4,     // px — spacing changes below this are ignored
@@ -174,7 +176,7 @@ const boxy = createBoxy({
 
 ### HTML Report
 
-Generated at `.layout-snapshots/report.html` with screenshots and issue details.
+Generated at `.boxy/report.html` with screenshots and issue details.
 
 ### CI
 

@@ -13,7 +13,7 @@ import { analyzeCausation } from './causation.js';
 export type { CaptureResult, StepResult, LinterConfig, SpatialModel, StyleChange, CausationResult };
 export { lint, compare, printReport, printCausationReport, generateHTMLReport, analyzeCausation };
 
-const DEFAULT_SNAPSHOT_DIR = '.layout-snapshots';
+const DEFAULT_SNAPSHOT_DIR = '.boxy';
 
 interface BoxyOptions {
   snapshotDir?: string;
