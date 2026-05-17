@@ -36,6 +36,12 @@ export function printReport(steps: StepResult[]): number {
         console.log(`    │ ${icon} ${item.title}`);
         console.log(`    │   ${item.selector}`);
         console.log(indented);
+        if (item.affectedChildren && item.affectedChildren.length > 0) {
+          console.log(`    │   also affects ${item.affectedChildren.length} children:`);
+          for (const child of item.affectedChildren) {
+            console.log(`    │     ├ ${child}`);
+          }
+        }
       }
       console.log('    └');
     }

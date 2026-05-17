@@ -21,31 +21,46 @@ export function lint(model: SpatialModel, config: Partial<LinterConfig> = {}): I
     ])
     .filter((issue): issue is Issue => issue !== null);
 
-  // Deduplicate clipping: if a parent is clipped, don't also flag children
-  // clipped by the same ancestor (they're clipped because their parent is)
-  const clippedSelectors = new Set(
-    elementIssues
-      .filter(i => i.category === 'CLIPPING')
-      .map(i => i.selector)
-  );
+  // Group clipping: if a parent is clipped, nest its clipped children under it
+  const clippingIssues = elementIssues.filter(i => i.category === 'CLIPPING');
+  const otherIssues = elementIssues.filter(i => i.category !== 'CLIPPING');
+  const clippedSelectors = new Set(clippingIssues.map(i => i.selector));
 
-  const deduped = elementIssues.filter(issue => {
-    if (issue.category !== 'CLIPPING') return true;
-    // Check if any ancestor of this element is already flagged as clipped
-    const el = model.elements.find(e => e.selector === issue.selector);
-    if (!el) return true;
+  const isDescendantOfClipped = (selector: string): string | null => {
+    const el = model.elements.find(e => e.selector === selector);
+    if (!el) return null;
     let parent = el.parentSelector;
     const visited = new Set<string>();
     while (parent && !visited.has(parent)) {
-      if (clippedSelectors.has(parent)) return false;
+      if (clippedSelectors.has(parent)) return parent;
       visited.add(parent);
       const parentEl = model.elements.find(e => e.selector === parent);
       parent = parentEl?.parentSelector ?? null;
     }
-    return true;
-  });
+    return null;
+  };
+
+  const rootClipping: Issue[] = [];
+  const childMap = new Map<string, string[]>();
+
+  for (const issue of clippingIssues) {
+    const ancestor = isDescendantOfClipped(issue.selector);
+    if (ancestor) {
+      if (!childMap.has(ancestor)) childMap.set(ancestor, []);
+      childMap.get(ancestor)!.push(issue.selector);
+    } else {
+      rootClipping.push(issue);
+    }
+  }
+
+  for (const issue of rootClipping) {
+    const children = childMap.get(issue.selector);
+    if (children && children.length > 0) {
+      issue.affectedChildren = children;
+    }
+  }
 
   const overlapIssues = findOverlapIssues(model.elements, cfg.ignore);
 
-  return [...deduped, ...overlapIssues];
+  return [...rootClipping, ...otherIssues, ...overlapIssues];
 }

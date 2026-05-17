@@ -358,25 +358,41 @@ but is clipped by: ${higher.clip.clippedBy}`
       ...checkCollapsed(el, cfg.collapsedMinSize),
       checkOffScreen(el, model.viewport)
     ]).filter((issue) => issue !== null);
-    const clippedSelectors = new Set(
-      elementIssues.filter((i) => i.category === "CLIPPING").map((i) => i.selector)
-    );
-    const deduped = elementIssues.filter((issue) => {
-      if (issue.category !== "CLIPPING") return true;
-      const el = model.elements.find((e) => e.selector === issue.selector);
-      if (!el) return true;
+    const clippingIssues = elementIssues.filter((i) => i.category === "CLIPPING");
+    const otherIssues = elementIssues.filter((i) => i.category !== "CLIPPING");
+    const clippedSelectors = new Set(clippingIssues.map((i) => i.selector));
+    const isDescendantOfClipped = (selector) => {
+      const el = model.elements.find((e) => e.selector === selector);
+      if (!el) return null;
       let parent = el.parentSelector;
       const visited = /* @__PURE__ */ new Set();
       while (parent && !visited.has(parent)) {
-        if (clippedSelectors.has(parent)) return false;
+        if (clippedSelectors.has(parent)) return parent;
         visited.add(parent);
         const parentEl = model.elements.find((e) => e.selector === parent);
         parent = parentEl?.parentSelector ?? null;
       }
-      return true;
-    });
+      return null;
+    };
+    const rootClipping = [];
+    const childMap = /* @__PURE__ */ new Map();
+    for (const issue of clippingIssues) {
+      const ancestor = isDescendantOfClipped(issue.selector);
+      if (ancestor) {
+        if (!childMap.has(ancestor)) childMap.set(ancestor, []);
+        childMap.get(ancestor).push(issue.selector);
+      } else {
+        rootClipping.push(issue);
+      }
+    }
+    for (const issue of rootClipping) {
+      const children = childMap.get(issue.selector);
+      if (children && children.length > 0) {
+        issue.affectedChildren = children;
+      }
+    }
     const overlapIssues = findOverlapIssues(model.elements, cfg.ignore);
-    return [...deduped, ...overlapIssues];
+    return [...rootClipping, ...otherIssues, ...overlapIssues];
   }
 
   // src/regression.ts

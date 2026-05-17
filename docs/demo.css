@@ -514,6 +514,27 @@ body {
   line-height: 1.5;
 }
 
+.issue-children {
+  margin-top: 8px;
+  padding: 8px 0 0;
+  border-top: 1px solid var(--border-light);
+}
+
+.issue-children-title {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-muted);
+  margin-bottom: 4px;
+}
+
+.issue-child-selector {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--text-secondary);
+  padding: 1px 0 1px 12px;
+  border-left: 2px solid var(--border);
+}
+
 .issue-changes {
   margin-top: 8px;
   padding-top: 8px;

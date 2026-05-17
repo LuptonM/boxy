@@ -85,6 +85,8 @@ export interface Issue {
   title: string;
   detail: string;
   styleChanges?: StyleChange[];
+  /** Child elements affected by the same issue (e.g. children clipped by same ancestor) */
+  affectedChildren?: string[];
 }
 
 export interface StepResult {

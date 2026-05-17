@@ -48,6 +48,7 @@ interface Issue {
   title: string;
   detail: string;
   styleChanges?: StyleChange[];
+  affectedChildren?: string[];
 }
 
 interface StyleChange {
@@ -267,6 +268,14 @@ function renderResults(issues: Issue[] | null) {
       html += '<div class="issue-title"><span class="severity-dot ' + issue.severity + '"></span>' + escHtml(issue.title) + '</div>';
       html += '<div class="issue-selector">' + escHtml(issue.selector) + '</div>';
       html += '<div class="issue-detail">' + escHtml(issue.detail) + '</div>';
+      if (issue.affectedChildren && issue.affectedChildren.length > 0) {
+        html += '<div class="issue-children">';
+        html += '<div class="issue-children-title">also affects ' + issue.affectedChildren.length + ' children:</div>';
+        for (const child of issue.affectedChildren) {
+          html += '<div class="issue-child-selector">' + escHtml(child) + '</div>';
+        }
+        html += '</div>';
+      }
       if (issue.styleChanges && issue.styleChanges.length > 0) {
         html += '<div class="issue-changes">';
         html += '<div class="issue-changes-title">CSS Changes</div>';
