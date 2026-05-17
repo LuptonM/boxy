@@ -23,6 +23,18 @@
       }
       var mutations = [
         {
+          id: "open-action-menu",
+          label: "Open row action menu \u2014 clipped by table overflow",
+          apply(doc) {
+            doc.querySelectorAll(".row-dropdown").forEach((d) => d.classList.remove("open"));
+            const btn = doc.querySelector('[data-testid="action-btn-8"]');
+            if (btn) btn.click();
+          },
+          remove(doc) {
+            doc.querySelectorAll(".row-dropdown").forEach((d) => d.classList.remove("open"));
+          }
+        },
+        {
           id: "topnav-clipped",
           label: "Topnav height crushed \u2014 clips nav buttons",
           apply(doc) {
@@ -48,20 +60,6 @@
             const f = doc.querySelector('[data-testid="filter-bar"]');
             f.style.height = "";
             f.style.overflow = "";
-          }
-        },
-        {
-          id: "table-clipped",
-          label: "Table area max-height too short \u2014 clips rows",
-          apply(doc) {
-            const t = doc.querySelector('[data-testid="table-area"]');
-            t.style.maxHeight = "400px";
-            t.style.overflow = "hidden";
-          },
-          remove(doc) {
-            const t = doc.querySelector('[data-testid="table-area"]');
-            t.style.maxHeight = "";
-            t.style.overflow = "";
           }
         },
         {
