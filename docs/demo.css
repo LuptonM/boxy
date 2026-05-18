@@ -52,6 +52,13 @@ body {
   pointer-events: none;
 }
 
+.hero-logo {
+  width: 240px;
+  height: auto;
+  margin-bottom: 24px;
+  position: relative;
+}
+
 .hero h1 {
   font-size: 56px;
   font-weight: 800;
@@ -99,6 +106,33 @@ body {
   font-size: 11px;
   color: var(--text-muted);
   font-family: 'Inter', system-ui, sans-serif;
+}
+
+.hero-links {
+  margin-top: 20px;
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+}
+
+.hero-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 20px;
+  background: var(--accent-dim);
+  color: var(--accent-light);
+  border: 1px solid rgba(99, 102, 241, 0.25);
+  border-radius: var(--radius);
+  font-size: 14px;
+  font-weight: 600;
+  text-decoration: none;
+  transition: all 0.2s;
+}
+
+.hero-btn:hover {
+  background: rgba(99, 102, 241, 0.25);
+  border-color: var(--accent);
 }
 
 /* ── Problem ── */

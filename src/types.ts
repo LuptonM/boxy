@@ -25,6 +25,13 @@ export interface SiblingSpacing {
   direction: 'horizontal' | 'vertical' | 'unknown';
 }
 
+export interface ScrollInfo {
+  scrollWidth: number;
+  scrollHeight: number;
+  overflowX: string;
+  overflowY: string;
+}
+
 export interface ElementModel {
   selector: string;
   tag: string;
@@ -33,6 +40,7 @@ export interface ElementModel {
   depth: number;
   position: string;
   overflow: string;
+  scroll: ScrollInfo;
   clip: ClipInfo;
   siblingSpacing: SiblingSpacing;
   parentSelector: string | null;
@@ -40,6 +48,8 @@ export interface ElementModel {
   hasVisibleContent: boolean;
   visibility: string;
   opacity: string;
+  ariaHidden: boolean;
+  role: string | null;
   styles: Record<string, string>;
 }
 

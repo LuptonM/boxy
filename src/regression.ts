@@ -87,7 +87,11 @@ export function compare(baseline: SpatialModel, current: SpatialModel, config: P
     }
   }
 
-  // 5. Spacing consistency — check groups of siblings
+  // 5. Broken scroll — overflow changed from scrollable to non-scrollable while content still overflows
+  const brokenScrollIssues = detectBrokenScroll(baseMap, currMap, cfg);
+  issues.push(...brokenScrollIssues);
+
+  // 6. Spacing consistency — check groups of siblings
   const spacingIssues = detectSpacingInconsistency(baseline, current, cfg);
   issues.push(...spacingIssues);
 
@@ -113,6 +117,57 @@ export function compare(baseline: SpatialModel, current: SpatialModel, config: P
 
     if (changes.length > 0) {
       issue.styleChanges = changes;
+    }
+  }
+
+  return issues;
+}
+
+/**
+ * Detect containers whose overflow changed from scrollable (auto/scroll) to
+ * non-scrollable (hidden/clip) while content still exceeds the visible area.
+ * This is a definitive signal: content that WAS reachable via scrolling is now inaccessible.
+ */
+function detectBrokenScroll(
+  baseMap: Map<string, ElementModel>,
+  currMap: Map<string, ElementModel>,
+  cfg: LinterConfig,
+): Issue[] {
+  const issues: Issue[] = [];
+
+  for (const [sel, currEl] of currMap) {
+    if (isIgnored(sel, cfg.ignore)) continue;
+    if (!currEl.scroll || !currEl.scroll.overflowX) continue;
+
+    const baseEl = baseMap.get(sel);
+    if (!baseEl?.scroll) continue;
+
+    const { overflowX: baseOX, overflowY: baseOY } = baseEl.scroll;
+    const { overflowX: currOX, overflowY: currOY } = currEl.scroll;
+
+    const wasScrollableY = baseOY === 'auto' || baseOY === 'scroll';
+    const nowBlockedY = currOY === 'hidden' || currOY === 'clip';
+    const overflowsY = currEl.scroll.scrollHeight > currEl.box.height;
+
+    const wasScrollableX = baseOX === 'auto' || baseOX === 'scroll';
+    const nowBlockedX = currOX === 'hidden' || currOX === 'clip';
+    const overflowsX = currEl.scroll.scrollWidth > currEl.box.width;
+
+    const brokenY = wasScrollableY && nowBlockedY && overflowsY;
+    const brokenX = wasScrollableX && nowBlockedX && overflowsX;
+
+    if (brokenY || brokenX) {
+      const axes: string[] = [];
+      if (brokenY) axes.push(`overflow-y: ${baseOY} → ${currOY} (scrollHeight: ${currEl.scroll.scrollHeight}px > height: ${currEl.box.height}px)`);
+      if (brokenX) axes.push(`overflow-x: ${baseOX} → ${currOX} (scrollWidth: ${currEl.scroll.scrollWidth}px > width: ${currEl.box.width}px)`);
+
+      issues.push({
+        category: 'CLIPPING',
+        severity: 'error',
+        selector: sel,
+        title: 'Scroll removed — content now unreachable',
+        detail: `container was scrollable, now clips content\n${axes.join('\n')}`,
+      });
     }
   }
 

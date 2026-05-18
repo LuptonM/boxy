@@ -12,12 +12,15 @@
 
 <!-- Hero -->
 <section class="hero">
-  <h1>Boxy</h1>
+  <img src="logo.png" alt="Boxy" class="hero-logo">
   <p class="tagline">Drop-in layout linter for Playwright. Add a few lines to your existing tests to catch clipping, overflow, and CSS regressions automatically.</p>
   <div class="install-cmd" onclick="navigator.clipboard.writeText('npm install boxy-layout').then(() => { this.querySelector('.copy-hint').textContent = 'Copied!'; setTimeout(() => this.querySelector('.copy-hint').textContent = 'click to copy', 1500) })">
     <span class="dollar">$</span>
     <span>npm install boxy-layout</span>
     <span class="copy-hint">click to copy</span>
+  </div>
+  <div class="hero-links">
+    <a href="test-cases.html" class="hero-btn">Test Case Catalog &rarr;</a>
   </div>
 </section>
 

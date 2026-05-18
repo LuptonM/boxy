@@ -4,6 +4,37 @@ export function isIgnored(selector: string, ignoreList: string[]): boolean {
   return ignoreList.some(pattern => selector.includes(pattern));
 }
 
+/**
+ * Detect if an element is intentionally hidden from ALL users (both visually
+ * and from assistive technology). Only suppress layout checks when the element
+ * is truly invisible — not when it's merely decorative (aria-hidden but visible).
+ *
+ * aria-hidden="true" alone is NOT sufficient — it only hides from AT, not visually.
+ * Decorative icons with aria-hidden are still rendered and can still be clipped.
+ */
+export function isIntentionallyHidden(el: ElementModel): boolean {
+  // Visually invisible (hidden or transparent) — regardless of aria state
+  if (el.visibility === 'hidden' || el.opacity === '0') return true;
+
+  // No visible content — nothing to see
+  if (!el.hasVisibleContent) return true;
+
+  // sr-only / visually-hidden pattern:
+  // position:absolute, dimensions ≤ 1px, off-screen
+  // These ARE visible to screen readers (no aria-hidden) but invisible to sighted users
+  if (el.position === 'absolute' &&
+      el.box.width <= 1 && el.box.height <= 1 &&
+      (el.box.x < 0 || el.box.y < 0 || el.box.x > 9000)) {
+    return true;
+  }
+
+  // aria-hidden="true" AND not visually rendered (zero-area or off-screen with no content)
+  // This catches elements hidden from BOTH AT and visually
+  if (el.ariaHidden && el.box.width === 0 && el.box.height === 0) return true;
+
+  return false;
+}
+
 export function boxesOverlap(a: BoundingBox, b: BoundingBox): boolean {
   return a.x < b.x + b.width && a.x + a.width > b.x &&
          a.y < b.y + b.height && a.y + a.height > b.y;
@@ -11,6 +42,7 @@ export function boxesOverlap(a: BoundingBox, b: BoundingBox): boolean {
 
 export function checkClipping(el: ElementModel): Issue | null {
   if (!el.clip.isClipped || !el.clip.clippedEdges) return null;
+  if (isIntentionallyHidden(el)) return null;
 
   const edges = el.clip.clippedEdges;
   const totalClipped = edges.top + edges.bottom + edges.left + edges.right;
@@ -38,6 +70,7 @@ export function checkClipping(el: ElementModel): Issue | null {
 
 export function checkCollapsed(el: ElementModel, collapsedMinSize: number): Issue[] {
   if (!el.hasVisibleContent || el.childCount === 0) return [];
+  if (isIntentionallyHidden(el)) return [];
 
   const issues: Issue[] = [];
 
@@ -72,6 +105,7 @@ export function checkOffScreen(el: ElementModel, viewport: { width: number; heig
 
   if (!fullyOff) return null;
   if (el.position === 'static' || !el.hasVisibleContent) return null;
+  if (isIntentionallyHidden(el)) return null;
 
   return {
     category: 'OFF_SCREEN',

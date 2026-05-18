@@ -113,7 +113,7 @@ var Boxy = (() => {
       let parent = el.parentElement;
       while (parent) {
         const ps = window.getComputedStyle(parent);
-        const hasClip = ps.overflow === "hidden" || ps.overflow === "auto" || ps.overflow === "scroll" || ps.overflowX === "hidden" || ps.overflowY === "hidden" || ps.overflowX === "auto" || ps.overflowY === "auto" || ps.overflowX === "scroll" || ps.overflowY === "scroll";
+        const hasClip = ps.overflow === "hidden" || ps.overflow === "auto" || ps.overflow === "scroll" || ps.overflow === "clip" || ps.overflowX === "hidden" || ps.overflowY === "hidden" || ps.overflowX === "auto" || ps.overflowY === "auto" || ps.overflowX === "scroll" || ps.overflowY === "scroll" || ps.overflowX === "clip" || ps.overflowY === "clip";
         if (hasClip) {
           const pr = parent.getBoundingClientRect();
           const edges = {
@@ -180,7 +180,14 @@ var Boxy = (() => {
     const root = document.querySelector(scope);
     if (!root) throw new Error(`Scope selector "${scope}" was not found during spatial model extraction.`);
     const elements = [];
-    const allEls = [root, ...Array.from(root.querySelectorAll("*"))];
+    const scopeRect = root.getBoundingClientRect();
+    const descendants = /* @__PURE__ */ new Set([root, ...Array.from(root.querySelectorAll("*"))]);
+    const allEls = Array.from(document.body.querySelectorAll("*")).filter((el) => {
+      if (descendants.has(el)) return true;
+      const r = el.getBoundingClientRect();
+      if (r.width === 0 && r.height === 0) return false;
+      return r.x < scopeRect.x + scopeRect.width && r.x + r.width > scopeRect.x && r.y < scopeRect.y + scopeRect.height && r.y + r.height > scopeRect.y;
+    });
     for (const el of allEls) {
       const rect = el.getBoundingClientRect();
       if (rect.width === 0 && rect.height === 0) continue;
@@ -208,6 +215,15 @@ var Boxy = (() => {
         }
       }
       const hasVisibleContent = el.childNodes.length > 0 && (el.textContent?.trim().length > 0 || el.querySelector("img, svg, canvas, video") !== null) && visibility !== "hidden" && opacity !== "0";
+      const ariaHidden = el.getAttribute("aria-hidden") === "true";
+      const role = el.getAttribute("role") || null;
+      const htmlEl = el;
+      const scroll = {
+        scrollWidth: htmlEl.scrollWidth ?? Math.round(rect.width),
+        scrollHeight: htmlEl.scrollHeight ?? Math.round(rect.height),
+        overflowX: computed.overflowX,
+        overflowY: computed.overflowY
+      };
       elements.push({
         selector,
         tag: el.tagName.toLowerCase(),
@@ -221,6 +237,7 @@ var Boxy = (() => {
         depth,
         position: computed.position,
         overflow: computed.overflow,
+        scroll,
         clip,
         siblingSpacing,
         parentSelector,
@@ -228,6 +245,8 @@ var Boxy = (() => {
         hasVisibleContent,
         visibility,
         opacity,
+        ariaHidden,
+        role,
         styles
       });
     }
@@ -264,11 +283,21 @@ var Boxy = (() => {
   function isIgnored(selector, ignoreList) {
     return ignoreList.some((pattern) => selector.includes(pattern));
   }
+  function isIntentionallyHidden(el) {
+    if (el.visibility === "hidden" || el.opacity === "0") return true;
+    if (!el.hasVisibleContent) return true;
+    if (el.position === "absolute" && el.box.width <= 1 && el.box.height <= 1 && (el.box.x < 0 || el.box.y < 0 || el.box.x > 9e3)) {
+      return true;
+    }
+    if (el.ariaHidden && el.box.width === 0 && el.box.height === 0) return true;
+    return false;
+  }
   function boxesOverlap(a, b) {
     return a.x < b.x + b.width && a.x + a.width > b.x && a.y < b.y + b.height && a.y + a.height > b.y;
   }
   function checkClipping(el) {
     if (!el.clip.isClipped || !el.clip.clippedEdges) return null;
+    if (isIntentionallyHidden(el)) return null;
     const edges = el.clip.clippedEdges;
     const totalClipped = edges.top + edges.bottom + edges.left + edges.right;
     if (totalClipped === 0) return null;
@@ -285,6 +314,7 @@ hidden: ${edgeStr}`
   }
   function checkCollapsed(el, collapsedMinSize) {
     if (!el.hasVisibleContent || el.childCount === 0) return [];
+    if (isIntentionallyHidden(el)) return [];
     const issues = [];
     if (el.box.width > 0 && el.box.width < collapsedMinSize) {
       issues.push({
@@ -312,6 +342,7 @@ element has ${el.childCount} children`
     const fullyOff = el.box.x + el.box.width < 0 || el.box.y + el.box.height < 0 || el.box.x > viewport.width || el.box.y > viewport.height;
     if (!fullyOff) return null;
     if (el.position === "static" || !el.hasVisibleContent) return null;
+    if (isIntentionallyHidden(el)) return null;
     return {
       category: "OFF_SCREEN",
       severity: "warning",
@@ -470,6 +501,8 @@ height: ${baseEl.box.height}px \u2192 ${currEl.box.height}px (${hChange.toFixed(
         }
       }
     }
+    const brokenScrollIssues = detectBrokenScroll(baseMap, currMap, cfg);
+    issues.push(...brokenScrollIssues);
     const spacingIssues = detectSpacingInconsistency(baseline, current, cfg);
     issues.push(...spacingIssues);
     const changeCache = /* @__PURE__ */ new Map();
@@ -487,6 +520,39 @@ height: ${baseEl.box.height}px \u2192 ${currEl.box.height}px (${hChange.toFixed(
       }
       if (changes.length > 0) {
         issue.styleChanges = changes;
+      }
+    }
+    return issues;
+  }
+  function detectBrokenScroll(baseMap, currMap, cfg) {
+    const issues = [];
+    for (const [sel, currEl] of currMap) {
+      if (isIgnored2(sel, cfg.ignore)) continue;
+      if (!currEl.scroll || !currEl.scroll.overflowX) continue;
+      const baseEl = baseMap.get(sel);
+      if (!baseEl?.scroll) continue;
+      const { overflowX: baseOX, overflowY: baseOY } = baseEl.scroll;
+      const { overflowX: currOX, overflowY: currOY } = currEl.scroll;
+      const wasScrollableY = baseOY === "auto" || baseOY === "scroll";
+      const nowBlockedY = currOY === "hidden" || currOY === "clip";
+      const overflowsY = currEl.scroll.scrollHeight > currEl.box.height;
+      const wasScrollableX = baseOX === "auto" || baseOX === "scroll";
+      const nowBlockedX = currOX === "hidden" || currOX === "clip";
+      const overflowsX = currEl.scroll.scrollWidth > currEl.box.width;
+      const brokenY = wasScrollableY && nowBlockedY && overflowsY;
+      const brokenX = wasScrollableX && nowBlockedX && overflowsX;
+      if (brokenY || brokenX) {
+        const axes = [];
+        if (brokenY) axes.push(`overflow-y: ${baseOY} \u2192 ${currOY} (scrollHeight: ${currEl.scroll.scrollHeight}px > height: ${currEl.box.height}px)`);
+        if (brokenX) axes.push(`overflow-x: ${baseOX} \u2192 ${currOX} (scrollWidth: ${currEl.scroll.scrollWidth}px > width: ${currEl.box.width}px)`);
+        issues.push({
+          category: "CLIPPING",
+          severity: "error",
+          selector: sel,
+          title: "Scroll removed \u2014 content now unreachable",
+          detail: `container was scrollable, now clips content
+${axes.join("\n")}`
+        });
       }
     }
     return issues;

@@ -77,10 +77,11 @@ export function captureScope(scope: string) {
     let parent = el.parentElement;
     while (parent) {
       const ps = window.getComputedStyle(parent);
-      const hasClip = ps.overflow === 'hidden' || ps.overflow === 'auto' || ps.overflow === 'scroll'
+      const hasClip = ps.overflow === 'hidden' || ps.overflow === 'auto' || ps.overflow === 'scroll' || ps.overflow === 'clip'
         || ps.overflowX === 'hidden' || ps.overflowY === 'hidden'
         || ps.overflowX === 'auto' || ps.overflowY === 'auto'
-        || ps.overflowX === 'scroll' || ps.overflowY === 'scroll';
+        || ps.overflowX === 'scroll' || ps.overflowY === 'scroll'
+        || ps.overflowX === 'clip' || ps.overflowY === 'clip';
 
       if (hasClip) {
         const pr = parent.getBoundingClientRect();
@@ -157,7 +158,20 @@ export function captureScope(scope: string) {
   if (!root) throw new Error(`Scope selector "${scope}" was not found during spatial model extraction.`);
 
   const elements: any[] = [];
-  const allEls = [root, ...Array.from(root.querySelectorAll('*'))];
+
+  // Capture elements in the DOM tree OR within the spatial bounds of the scope.
+  // This catches portaled elements (React portals, Radix popovers, etc.) that
+  // are appended to <body> but visually appear within the scoped area.
+  const scopeRect = root.getBoundingClientRect();
+  const descendants = new Set<Element>([root, ...Array.from(root.querySelectorAll('*'))]);
+  const allEls = Array.from(document.body.querySelectorAll('*')).filter(el => {
+    if (descendants.has(el)) return true;
+    const r = el.getBoundingClientRect();
+    if (r.width === 0 && r.height === 0) return false;
+    // Check spatial overlap with scope bounds
+    return r.x < scopeRect.x + scopeRect.width && r.x + r.width > scopeRect.x &&
+           r.y < scopeRect.y + scopeRect.height && r.y + r.height > scopeRect.y;
+  });
 
   for (const el of allEls) {
     const rect = el.getBoundingClientRect();
@@ -197,6 +211,17 @@ export function captureScope(scope: string) {
       el.querySelector('img, svg, canvas, video') !== null
     ) && visibility !== 'hidden' && opacity !== '0';
 
+    const ariaHidden = el.getAttribute('aria-hidden') === 'true';
+    const role = el.getAttribute('role') || null;
+
+    const htmlEl = el as HTMLElement;
+    const scroll = {
+      scrollWidth: htmlEl.scrollWidth ?? Math.round(rect.width),
+      scrollHeight: htmlEl.scrollHeight ?? Math.round(rect.height),
+      overflowX: computed.overflowX,
+      overflowY: computed.overflowY,
+    };
+
     elements.push({
       selector,
       tag: el.tagName.toLowerCase(),
@@ -210,6 +235,7 @@ export function captureScope(scope: string) {
       depth,
       position: computed.position,
       overflow: computed.overflow,
+      scroll,
       clip,
       siblingSpacing,
       parentSelector,
@@ -217,6 +243,8 @@ export function captureScope(scope: string) {
       hasVisibleContent,
       visibility,
       opacity,
+      ariaHidden,
+      role,
       styles,
     });
   }
