@@ -169,6 +169,50 @@ test('Size within threshold — no issue', () => {
   assert.equal(size.length, 0);
 });
 
+test('Size from zero width to nonzero — SIZE', () => {
+  const baseEl = makeElement({
+    selector: '[data-testid="box"]',
+    box: { x: 0, y: 0, width: 0, height: 50 },
+    hasVisibleContent: true,
+  });
+  const currEl = makeElement({
+    selector: '[data-testid="box"]',
+    box: { x: 0, y: 0, width: 20, height: 50 },
+    hasVisibleContent: true,
+  });
+  const issues = compare(makeModel([baseEl]), makeModel([currEl]), { sizeChangePercent: 30 });
+  const size = issues.filter(i => i.category === 'SIZE');
+  assert.equal(size.length, 1);
+  assert.ok(size[0].detail.includes('100% change'));
+});
+
+test('sr-only clipped near origin — no POSITION or SIZE regression', () => {
+  const baseEl = makeElement({
+    selector: '.sr-only',
+    position: 'absolute',
+    overflow: 'hidden',
+    styles: { overflow: 'hidden', clipPath: 'inset(50%)' },
+    box: { x: 0, y: 0, width: 1, height: 1 },
+    hasVisibleContent: true,
+    childCount: 1,
+  });
+  const currEl = makeElement({
+    selector: '.sr-only',
+    position: 'absolute',
+    overflow: 'hidden',
+    styles: { overflow: 'hidden', clipPath: 'inset(50%)' },
+    box: { x: 100, y: 100, width: 0, height: 0 },
+    hasVisibleContent: true,
+    childCount: 1,
+  });
+  const issues = compare(makeModel([baseEl]), makeModel([currEl]), {
+    positionThreshold: 20,
+    sizeChangePercent: 30,
+  });
+  assert.equal(issues.filter(i => i.category === 'POSITION').length, 0);
+  assert.equal(issues.filter(i => i.category === 'SIZE').length, 0);
+});
+
 test('New element appeared — no issue', () => {
   const baseEl = makeElement({
     selector: '[data-testid="existing"]',

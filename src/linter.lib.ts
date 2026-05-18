@@ -21,12 +21,15 @@ export function isIntentionallyHidden(el: ElementModel): boolean {
 
   // sr-only / visually-hidden pattern:
   // position:absolute, dimensions ≤ 1px, positioned off-screen via negative coords
-  // These ARE visible to screen readers (no aria-hidden) but invisible to sighted users
-  // Only match negative coordinates (the universal sr-only technique), not large positive
-  // values which could be real elements on ultra-wide displays.
+  // OR clipped at any position using common Bootstrap/Tailwind patterns.
+  // These ARE visible to screen readers (no aria-hidden) but invisible to sighted users.
+  const clip = el.styles.clip;
+  const clipPath = el.styles.clipPath;
+  const hasSrOnlyClip = el.overflow === 'hidden' &&
+    ((clip && clip !== 'auto') || (clipPath && clipPath !== 'none'));
   if (el.position === 'absolute' &&
       el.box.width <= 1 && el.box.height <= 1 &&
-      (el.box.x < -9000 || el.box.y < -9000)) {
+      ((el.box.x < -9000 || el.box.y < -9000) || hasSrOnlyClip)) {
     return true;
   }
 
@@ -38,8 +41,8 @@ export function isIntentionallyHidden(el: ElementModel): boolean {
 }
 
 export function boxesOverlap(a: BoundingBox, b: BoundingBox): boolean {
-  return a.x <= b.x + b.width && a.x + a.width >= b.x &&
-         a.y <= b.y + b.height && a.y + a.height >= b.y;
+  return a.x < b.x + b.width && a.x + a.width > b.x &&
+         a.y < b.y + b.height && a.y + a.height > b.y;
 }
 
 export function checkClipping(el: ElementModel): Issue | null {

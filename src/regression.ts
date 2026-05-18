@@ -1,5 +1,6 @@
 import type { SpatialModel, Issue, LinterConfig, ElementModel, StyleChange } from './types.js';
 import { DEFAULT_CONFIG } from './types.js';
+import { isIntentionallyHidden } from './linter.lib.js';
 
 /**
  * Compare current spatial model against baseline — detect regressions.
@@ -60,7 +61,8 @@ export function compare(baseline: SpatialModel, current: SpatialModel, config: P
     // 3. Position shift
     const dx = Math.abs(currEl.box.x - baseEl.box.x);
     const dy = Math.abs(currEl.box.y - baseEl.box.y);
-    if (dx > cfg.positionThreshold || dy > cfg.positionThreshold) {
+    const isHiddenUtility = isIntentionallyHidden(baseEl) || isIntentionallyHidden(currEl);
+    if (!isHiddenUtility && (dx > cfg.positionThreshold || dy > cfg.positionThreshold)) {
       issues.push({
         category: 'POSITION',
         severity: 'error',
@@ -71,11 +73,9 @@ export function compare(baseline: SpatialModel, current: SpatialModel, config: P
     }
 
     // 4. Size change (check each axis independently to avoid division by zero)
-    if (baseEl.box.width > 0 || baseEl.box.height > 0) {
-      const wChange = baseEl.box.width > 0
-        ? Math.abs(currEl.box.width - baseEl.box.width) / baseEl.box.width * 100 : 0;
-      const hChange = baseEl.box.height > 0
-        ? Math.abs(currEl.box.height - baseEl.box.height) / baseEl.box.height * 100 : 0;
+    if (!isHiddenUtility) {
+      const wChange = dimensionChangePercent(baseEl.box.width, currEl.box.width);
+      const hChange = dimensionChangePercent(baseEl.box.height, currEl.box.height);
 
       if (wChange > cfg.sizeChangePercent || hChange > cfg.sizeChangePercent) {
         issues.push({
@@ -123,6 +123,12 @@ export function compare(baseline: SpatialModel, current: SpatialModel, config: P
   }
 
   return issues;
+}
+
+function dimensionChangePercent(baseline: number, current: number): number {
+  if (baseline === 0 && current === 0) return 0;
+  if (baseline === 0 || current === 0) return 100;
+  return Math.abs(current - baseline) / baseline * 100;
 }
 
 /**

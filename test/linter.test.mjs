@@ -830,6 +830,45 @@ test('sr-only pattern — not flagged COLLAPSED', () => {
   assert.equal(issues.filter(i => i.category === 'COLLAPSED').length, 0);
 });
 
+test('sr-only clipped near origin — not flagged CLIPPING or COLLAPSED', () => {
+  const el = makeElement({
+    selector: '.sr-only',
+    position: 'absolute',
+    overflow: 'hidden',
+    styles: { overflow: 'hidden', clip: 'rect(0, 0, 0, 0)' },
+    box: { x: 0, y: 0, width: 1, height: 1 },
+    hasVisibleContent: true,
+    childCount: 1,
+    clip: {
+      isClipped: true,
+      clippedBy: '[data-testid="root"]',
+      clippedEdges: { top: 0, bottom: 1, left: 0, right: 1 },
+    },
+  });
+  const issues = lint(makeModel([el]));
+  assert.equal(issues.filter(i => i.category === 'CLIPPING').length, 0);
+  assert.equal(issues.filter(i => i.category === 'COLLAPSED').length, 0);
+});
+
+test('Touching boxes — not reported as OVERLAP', () => {
+  const a = makeElement({
+    selector: '[data-testid="a"]',
+    position: 'absolute',
+    zIndex: 10,
+    box: { x: 0, y: 0, width: 100, height: 100 },
+    clip: { isClipped: true, clippedBy: '[data-testid="root"]', clippedEdges: { top: 0, bottom: 10, left: 0, right: 0 } },
+  });
+  const b = makeElement({
+    selector: '[data-testid="b"]',
+    position: 'absolute',
+    zIndex: 1,
+    box: { x: 100, y: 0, width: 100, height: 100 },
+    clip: { isClipped: false },
+  });
+  const issues = lint(makeModel([a, b]));
+  assert.equal(issues.filter(i => i.category === 'OVERLAP').length, 0);
+});
+
 test('Actual off-screen bug (NOT aria-hidden, NOT sr-only) — still flagged', () => {
   const el = makeElement({
     selector: '[data-testid="broken-popup"]',

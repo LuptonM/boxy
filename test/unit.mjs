@@ -109,6 +109,19 @@ await assert.rejects(
     assert.equal(root.opacity, '0');
     assert.equal(child?.opacity, '0');
 
+    await page.setContent(`
+      <div data-testid="root" style="position: relative; width: 200px; height: 100px;">
+        <div data-testid="child" style="width: 50px; height: 20px;">Child</div>
+      </div>
+      <div data-testid="static-banner" style="position: relative; width: 200px; height: 20px; margin-top: -20px;">Banner</div>
+      <div data-testid="portal" style="position: fixed; left: 20px; top: 20px; width: 80px; height: 20px;">Portal</div>
+    `);
+
+    const scoped = await capture(page, { name: 'spatial-scope', scope: '[data-testid="root"]' });
+    assert.ok(scoped.model.elements.find(el => el.selector === '[data-testid="child"]'), 'descendant should be captured');
+    assert.ok(scoped.model.elements.find(el => el.selector === '[data-testid="portal"]'), 'fixed non-descendant portal should be captured');
+    assert.equal(scoped.model.elements.find(el => el.selector === '[data-testid="static-banner"]'), undefined, 'relative non-descendant should not be captured');
+
     await ctx.close();
     await browser.close();
   }

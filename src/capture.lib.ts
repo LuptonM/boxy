@@ -17,7 +17,7 @@ export function captureScope(scope: string) {
     'margin', 'padding',
     'flexShrink', 'flexGrow', 'flexBasis',
     'gridTemplateColumns', 'gap',
-    'transform', 'clipPath',
+    'transform', 'clip', 'clipPath',
   ];
 
   function buildSelector(el: Element): string {
@@ -168,6 +168,8 @@ export function captureScope(scope: string) {
   const descendants = new Set<Element>([root, ...Array.from(root.querySelectorAll('*'))]);
   const allEls = Array.from(document.body.querySelectorAll('*')).filter(el => {
     if (descendants.has(el)) return true;
+    const computed = window.getComputedStyle(el);
+    if (computed.position !== 'absolute' && computed.position !== 'fixed') return false;
     const r = el.getBoundingClientRect();
     if (r.width === 0 && r.height === 0) return false;
     // Check spatial overlap with scope bounds
