@@ -1,6 +1,6 @@
 import type { SpatialModel, Issue, LinterConfig, ElementModel, StyleChange } from './types.js';
 import { DEFAULT_CONFIG } from './types.js';
-import { isIntentionallyHidden } from './linter.lib.js';
+import { isIntentionallyHidden, boxesOverlap } from './linter.lib.js';
 
 /**
  * Compare current spatial model against baseline — detect regressions.
@@ -89,7 +89,11 @@ export function compare(baseline: SpatialModel, current: SpatialModel, config: P
     }
   }
 
-  // 5. Broken scroll — overflow changed from scrollable to non-scrollable while content still overflows
+  // 5. Z-index burial — element's z-index decreased and it now overlaps a higher element
+  const zIndexIssues = detectZIndexBurial(baseMap, currMap, cfg);
+  issues.push(...zIndexIssues);
+
+  // 6. Broken scroll — overflow changed from scrollable to non-scrollable while content still overflows
   const brokenScrollIssues = detectBrokenScroll(baseMap, currMap, cfg);
   issues.push(...brokenScrollIssues);
 
@@ -129,6 +133,49 @@ function dimensionChangePercent(baseline: number, current: number): number {
   if (baseline === 0 && current === 0) return 0;
   if (baseline === 0 || current === 0) return 100;
   return Math.abs(current - baseline) / baseline * 100;
+}
+
+/**
+ * Detect elements whose z-index decreased and that now overlap a higher-z element.
+ * This catches the "popover buried behind header" pattern where a z-index regression
+ * causes an interactive element to render behind another.
+ */
+function detectZIndexBurial(
+  baseMap: Map<string, ElementModel>,
+  currMap: Map<string, ElementModel>,
+  cfg: LinterConfig,
+): Issue[] {
+  const issues: Issue[] = [];
+
+  for (const [sel, currEl] of currMap) {
+    if (isIgnored(sel, cfg.ignore)) continue;
+    if (currEl.position === 'static') continue;
+
+    const baseEl = baseMap.get(sel);
+    if (!baseEl) continue;
+
+    // z-index decreased?
+    if (currEl.zIndex >= baseEl.zIndex) continue;
+
+    // Find any current element with higher z-index that overlaps this one
+    for (const [otherSel, otherEl] of currMap) {
+      if (otherSel === sel) continue;
+      if (otherEl.position === 'static') continue;
+      if (otherEl.zIndex <= currEl.zIndex) continue;
+      if (!boxesOverlap(currEl.box, otherEl.box)) continue;
+
+      issues.push({
+        category: 'OVERLAP',
+        severity: 'error',
+        selector: sel,
+        title: 'Element buried by z-index regression',
+        detail: `z-index: ${baseEl.zIndex} → ${currEl.zIndex}\nnow behind: ${otherSel} (z:${otherEl.zIndex})`,
+      });
+      break; // one issue per buried element
+    }
+  }
+
+  return issues;
 }
 
 /**
