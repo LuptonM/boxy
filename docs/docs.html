@@ -1,0 +1,1140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Boxy — Documentation</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #0a0a0f;
+  --surface: #12121a;
+  --surface-2: #1a1a25;
+  --surface-3: #222233;
+  --border: #2a2a3a;
+  --border-light: #1e1e2e;
+  --text: #e8e8f0;
+  --text-secondary: #9898b0;
+  --text-muted: #606078;
+  --accent: #6366f1;
+  --accent-light: #818cf8;
+  --accent-dim: rgba(99, 102, 241, 0.15);
+  --accent-border: rgba(99, 102, 241, 0.25);
+  --red: #ef4444;
+  --red-dim: rgba(239, 68, 68, 0.12);
+  --amber: #f59e0b;
+  --amber-dim: rgba(245, 158, 11, 0.12);
+  --green: #22c55e;
+  --green-dim: rgba(34, 197, 94, 0.12);
+  --cyan: #22d3ee;
+  --cyan-dim: rgba(34, 211, 238, 0.12);
+  --pink: #f472b6;
+  --pink-dim: rgba(244, 114, 182, 0.12);
+  --radius: 8px;
+  --radius-lg: 12px;
+  --mono: 'JetBrains Mono', 'SF Mono', monospace;
+  --sidebar-w: 230px;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  font-family: 'Inter', system-ui, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.65;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ── Layout ── */
+.docs-layout {
+  display: flex;
+  min-height: 100vh;
+}
+
+/* ── Sidebar ── */
+.sidebar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: var(--sidebar-w);
+  height: 100vh;
+  background: var(--surface);
+  border-right: 1px solid var(--border-light);
+  overflow-y: auto;
+  z-index: 50;
+  display: flex;
+  flex-direction: column;
+}
+
+.sidebar::-webkit-scrollbar { width: 4px; }
+.sidebar::-webkit-scrollbar-track { background: transparent; }
+.sidebar::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+.sidebar-header {
+  padding: 20px 20px 16px;
+  border-bottom: 1px solid var(--border-light);
+  flex-shrink: 0;
+}
+
+.sidebar-logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+  color: var(--text);
+  font-weight: 700;
+  font-size: 15px;
+  margin-bottom: 8px;
+}
+
+.sidebar-logo img {
+  width: 28px;
+  height: auto;
+}
+
+.sidebar-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  color: var(--text-muted);
+  text-decoration: none;
+  transition: color 0.2s;
+}
+.sidebar-back:hover { color: var(--accent-light); }
+
+.toc {
+  padding: 16px 0;
+  flex: 1;
+}
+
+.toc-section {
+  padding: 0 12px;
+  margin-bottom: 4px;
+}
+
+.toc-link {
+  display: block;
+  padding: 6px 12px;
+  font-size: 13px;
+  color: var(--text-secondary);
+  text-decoration: none;
+  border-radius: 6px;
+  transition: all 0.2s;
+  line-height: 1.4;
+}
+
+.toc-link:hover {
+  color: var(--text);
+  background: var(--surface-2);
+}
+
+.toc-link.active {
+  color: var(--accent-light);
+  background: var(--accent-dim);
+}
+
+.toc-sub {
+  padding-left: 12px;
+}
+
+.toc-sub .toc-link {
+  font-size: 12px;
+  padding: 4px 12px;
+  color: var(--text-muted);
+}
+
+.toc-sub .toc-link:hover { color: var(--text-secondary); }
+.toc-sub .toc-link.active { color: var(--accent-light); }
+
+.toc-divider {
+  height: 1px;
+  background: var(--border-light);
+  margin: 10px 20px;
+}
+
+/* ── Main Content ── */
+.main {
+  margin-left: var(--sidebar-w);
+  flex: 1;
+  max-width: 820px;
+  padding: 40px 48px 120px;
+}
+
+.main h1 {
+  font-size: 28px;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  margin-bottom: 8px;
+  background: linear-gradient(135deg, #fff 0%, var(--accent-light) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.main .subtitle {
+  font-size: 15px;
+  color: var(--text-secondary);
+  margin-bottom: 40px;
+  line-height: 1.6;
+}
+
+/* ── Accordion ── */
+.accordion {
+  margin-bottom: 12px;
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius);
+  overflow: hidden;
+  transition: border-color 0.3s;
+}
+
+.accordion:hover { border-color: var(--border); }
+
+.accordion-trigger {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px 20px;
+  background: var(--surface);
+  border: none;
+  color: var(--text);
+  font-family: inherit;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.2s;
+}
+
+.accordion-trigger:hover { background: var(--surface-2); }
+
+.accordion-chevron {
+  width: 16px;
+  height: 16px;
+  color: var(--text-muted);
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  flex-shrink: 0;
+}
+
+.accordion.open .accordion-chevron {
+  transform: rotate(90deg);
+}
+
+.accordion-summary {
+  flex: 1;
+  min-width: 0;
+}
+
+.accordion-hint {
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--text-muted);
+  margin-top: 2px;
+}
+
+.accordion-badge {
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  padding: 3px 8px;
+  border-radius: 4px;
+  font-family: var(--mono);
+  flex-shrink: 0;
+}
+
+.badge-lint { background: var(--green-dim); color: var(--green); }
+.badge-regression { background: var(--amber-dim); color: var(--amber); }
+.badge-both { background: var(--accent-dim); color: var(--accent-light); }
+
+.accordion-body {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.accordion.open .accordion-body {
+  max-height: 2000px;
+}
+
+.accordion-content {
+  padding: 0 20px 20px;
+  font-size: 14px;
+  color: var(--text-secondary);
+  line-height: 1.7;
+}
+
+/* ── Section headings ── */
+.section {
+  margin-bottom: 36px;
+  scroll-margin-top: 24px;
+}
+
+.section-title {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--text-muted);
+  margin-bottom: 16px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--border-light);
+}
+
+/* ── Typography ── */
+.accordion-content p { margin-bottom: 12px; }
+
+.accordion-content strong { color: var(--text); font-weight: 600; }
+
+.accordion-content ul {
+  margin: 8px 0 12px 20px;
+}
+
+.accordion-content li {
+  margin-bottom: 4px;
+}
+
+.accordion-content em {
+  color: var(--text);
+  font-style: normal;
+  background: var(--accent-dim);
+  padding: 1px 6px;
+  border-radius: 3px;
+  font-size: 13px;
+}
+
+/* ── Inline code ── */
+code {
+  font-family: var(--mono);
+  font-size: 12px;
+  background: var(--surface-2);
+  border: 1px solid var(--border-light);
+  padding: 2px 6px;
+  border-radius: 4px;
+  color: var(--accent-light);
+}
+
+/* ── Code blocks ── */
+pre {
+  background: var(--surface);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius);
+  padding: 16px 20px;
+  margin: 12px 0;
+  overflow-x: auto;
+  line-height: 1.6;
+}
+
+pre code {
+  background: none;
+  border: none;
+  padding: 0;
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+pre .kw { color: var(--accent-light); }
+pre .str { color: var(--green); }
+pre .cmt { color: var(--text-muted); }
+pre .fn { color: var(--cyan); }
+pre .num { color: var(--amber); }
+pre .type { color: var(--pink); }
+
+/* ── Tables ── */
+.doc-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 12px 0;
+  font-size: 13px;
+}
+
+.doc-table th {
+  text-align: left;
+  padding: 8px 12px;
+  background: var(--surface-2);
+  color: var(--text-muted);
+  font-weight: 600;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  border-bottom: 1px solid var(--border);
+}
+
+.doc-table td {
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--border-light);
+  color: var(--text-secondary);
+  vertical-align: top;
+}
+
+.doc-table td:first-child {
+  color: var(--text);
+  font-family: var(--mono);
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+/* ── Callout boxes ── */
+.callout {
+  padding: 14px 18px;
+  border-radius: var(--radius);
+  margin: 12px 0;
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.callout-info {
+  background: var(--accent-dim);
+  border-left: 3px solid var(--accent);
+  color: var(--text-secondary);
+}
+
+.callout-warn {
+  background: var(--amber-dim);
+  border-left: 3px solid var(--amber);
+  color: var(--text-secondary);
+}
+
+.callout-ok {
+  background: var(--green-dim);
+  border-left: 3px solid var(--green);
+  color: var(--text-secondary);
+}
+
+.callout strong { color: var(--text); }
+
+/* ── Check card (for detection checks) ── */
+.check-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin: 12px 0;
+}
+
+.check-card {
+  padding: 10px 14px;
+  background: var(--surface-2);
+  border: 1px solid var(--border-light);
+  border-radius: 6px;
+  font-size: 12px;
+}
+
+.check-card-title {
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: 2px;
+  font-size: 12px;
+}
+
+.check-card p {
+  color: var(--text-muted);
+  margin: 0;
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+/* ── Property list ── */
+.prop-list {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+  margin: 12px 0;
+}
+
+.prop-item {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  padding: 6px 10px;
+  background: var(--surface-2);
+  border-radius: 4px;
+  font-size: 12px;
+}
+
+.prop-name {
+  font-family: var(--mono);
+  color: var(--accent-light);
+  font-size: 11px;
+}
+
+.prop-type {
+  color: var(--text-muted);
+  font-size: 10px;
+  font-family: var(--mono);
+}
+
+/* ── Responsive ── */
+@media (max-width: 900px) {
+  .sidebar { display: none; }
+  .main { margin-left: 0; padding: 24px 20px 80px; }
+}
+
+/* ── Subtle page load ── */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.main > * {
+  animation: fadeUp 0.4s ease both;
+}
+
+.main > *:nth-child(1) { animation-delay: 0.05s; }
+.main > *:nth-child(2) { animation-delay: 0.1s; }
+.main > *:nth-child(3) { animation-delay: 0.15s; }
+.main > *:nth-child(4) { animation-delay: 0.2s; }
+</style>
+</head>
+<body>
+
+<div class="docs-layout">
+
+<!-- ── Sidebar ── -->
+<nav class="sidebar">
+  <div class="sidebar-header">
+    <a href="index.html" class="sidebar-logo">
+      <img src="logo.png" alt="Boxy">
+      <span>Boxy Docs</span>
+    </a>
+    <a href="index.html" class="sidebar-back">&larr; Back to home</a>
+  </div>
+
+  <div class="toc">
+    <div class="toc-section">
+      <a href="#how-it-works" class="toc-link">How It Works</a>
+    </div>
+
+    <div class="toc-section">
+      <a href="#detection" class="toc-link">Detection Checks</a>
+      <div class="toc-sub">
+        <a href="#check-clipping" class="toc-link">Clipping</a>
+        <a href="#check-collapsed" class="toc-link">Collapsed</a>
+        <a href="#check-offscreen" class="toc-link">Off-Screen</a>
+        <a href="#check-overlap" class="toc-link">Overlap</a>
+        <a href="#check-scroll" class="toc-link">Broken Scroll</a>
+        <a href="#check-visibility" class="toc-link">Visibility</a>
+        <a href="#check-spacing" class="toc-link">Spacing</a>
+        <a href="#check-position" class="toc-link">Position</a>
+        <a href="#check-size" class="toc-link">Size</a>
+      </div>
+    </div>
+
+    <div class="toc-divider"></div>
+
+    <div class="toc-section">
+      <a href="#intent" class="toc-link">Intent Suppression</a>
+    </div>
+    <div class="toc-section">
+      <a href="#spatial-model" class="toc-link">Spatial Model</a>
+    </div>
+    <div class="toc-section">
+      <a href="#configuration" class="toc-link">Configuration</a>
+    </div>
+    <div class="toc-section">
+      <a href="#limitations" class="toc-link">Known Limitations</a>
+    </div>
+    <div class="toc-section">
+      <a href="#api" class="toc-link">API Reference</a>
+    </div>
+  </div>
+</nav>
+
+<!-- ── Main Content ── -->
+<main class="main">
+
+<h1>Documentation</h1>
+<p class="subtitle">How Boxy detects layout bugs, what it catches, what it ignores, and how to configure it.</p>
+
+<!-- ═══ HOW IT WORKS ═══ -->
+<div class="section" id="how-it-works">
+  <div class="section-title">Overview</div>
+
+  <div class="accordion open">
+    <button class="accordion-trigger" onclick="toggleAccordion(this)">
+      <svg class="accordion-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
+      <div class="accordion-summary">
+        How It Works
+        <div class="accordion-hint">Spatial model capture, two-layer analysis, verified causation</div>
+      </div>
+    </button>
+    <div class="accordion-body">
+      <div class="accordion-content">
+        <p>Boxy captures a <strong>spatial model</strong> of every visible element on the page: bounding box, computed styles, overflow chains, z-index stacking, scroll dimensions, and ARIA attributes. This model is pure data (JSON) &mdash; no screenshots, no pixel comparison.</p>
+
+        <p>It then runs two layers of analysis:</p>
+
+        <div class="check-grid">
+          <div class="check-card">
+            <div class="check-card-title">Static Lint</div>
+            <p>Single snapshot analysis. No baseline needed. Detects clipping, collapse, off-screen, and overlap issues from the current page state alone.</p>
+          </div>
+          <div class="check-card">
+            <div class="check-card-title">Regression Compare</div>
+            <p>Baseline vs current. Detects position shifts, size changes, visibility loss, spacing changes, and broken scroll containers.</p>
+          </div>
+        </div>
+
+        <p>When a regression is detected, Boxy can optionally run <strong>causation analysis</strong> &mdash; re-rendering the page with each CSS change applied in isolation to prove exactly which property caused the breakage.</p>
+
+        <div class="callout callout-info">
+          <strong>Key insight:</strong> Layout bugs are structural, not visual. You don't need to compare pixels to know a dropdown is clipped &mdash; you just need to know its bounding box extends beyond a parent with <code>overflow: hidden</code>. That's a math problem, not a vision problem.
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ DETECTION CHECKS ═══ -->
+<div class="section" id="detection">
+  <div class="section-title">Detection Checks</div>
+
+  <!-- CLIPPING -->
+  <div class="accordion" id="check-clipping">
+    <button class="accordion-trigger" onclick="toggleAccordion(this)">
+      <svg class="accordion-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
+      <div class="accordion-summary">
+        Clipping
+        <div class="accordion-hint">Positioned elements cut off by parent overflow</div>
+      </div>
+      <span class="accordion-badge badge-lint">LINT</span>
+    </button>
+    <div class="accordion-body">
+      <div class="accordion-content">
+        <p>Detects <code>absolute</code> or <code>fixed</code> positioned elements that extend beyond a parent with <code>overflow: hidden</code>, <code>auto</code>, <code>scroll</code>, or <code>clip</code>.</p>
+
+        <p>This catches the most common layout bug: <strong>dropdowns, popovers, tooltips, and menus clipped by an ancestor container</strong>.</p>
+
+        <p><strong>What triggers it:</strong></p>
+        <ul>
+          <li>Element has <code>position: absolute</code> or <code>position: fixed</code></li>
+          <li>An ancestor has overflow that clips</li>
+          <li>The element's bounding box extends beyond that ancestor</li>
+          <li>Any amount of clipping counts (even 1px)</li>
+        </ul>
+
+        <p><strong>What does NOT trigger:</strong></p>
+        <ul>
+          <li><code>position: static</code> or <code>relative</code> elements &mdash; assumed intentional (text truncation, image crops, carousels)</li>
+          <li>Elements that fit within their parent bounds (no overflow)</li>
+          <li>Elements suppressed by intent signals (visibility:hidden, opacity:0)</li>
+        </ul>
+
+        <div class="callout callout-info">
+          <strong>Nested clipping:</strong> If a parent dropdown is clipped and its child tooltip is also clipped by the same ancestor, Boxy reports one issue on the parent with <code>affectedChildren</code> listing the nested elements.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- COLLAPSED -->
+  <div class="accordion" id="check-collapsed">
+    <button class="accordion-trigger" onclick="toggleAccordion(this)">
+      <svg class="accordion-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
+      <div class="accordion-summary">
+        Collapsed
+        <div class="accordion-hint">Near-zero dimensions with visible content</div>
+      </div>
+      <span class="accordion-badge badge-lint">LINT</span>
+    </button>
+    <div class="accordion-body">
+      <div class="accordion-content">
+        <p>Flags elements with width or height between 1px and <code>collapsedMinSize</code> (default: 5px) that have visible content and child elements.</p>
+
+        <p><strong>Conditions:</strong></p>
+        <ul>
+          <li><code>width &gt; 0 && width &lt; collapsedMinSize</code> (or same for height)</li>
+          <li><code>hasVisibleContent: true</code></li>
+          <li><code>childCount &gt; 0</code></li>
+        </ul>
+
+        <div class="callout callout-warn">
+          <strong>Gap:</strong> Elements at exactly <code>width: 0</code> are not flagged (the check requires <code>width &gt; 0</code>). Zero-dimension elements are normally filtered at capture time. Text-only elements without child elements (<code>childCount: 0</code>) are also skipped. Both cases need regression mode (SIZE check) to detect.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- OFF-SCREEN -->
+  <div class="accordion" id="check-offscreen">
+    <button class="accordion-trigger" onclick="toggleAccordion(this)">
+      <svg class="accordion-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
+      <div class="accordion-summary">
+        Off-Screen
+        <div class="accordion-hint">Positioned elements outside viewport bounds</div>
+      </div>
+      <span class="accordion-badge badge-lint">LINT</span>
+    </button>
+    <div class="accordion-body">
+      <div class="accordion-content">
+        <p>Flags elements that are <strong>entirely</strong> outside the viewport bounds.</p>
+
+        <p><strong>Conditions:</strong></p>
+        <ul>
+          <li>Element is fully off-screen (no part visible in viewport)</li>
+          <li><code>position</code> is not <code>static</code></li>
+          <li><code>hasVisibleContent: true</code></li>
+          <li>Not intentionally hidden (sr-only pattern, visibility:hidden, etc.)</li>
+        </ul>
+
+        <div class="callout callout-warn">
+          <strong>Gap:</strong> Partially off-screen elements are not flagged. A dropdown hanging 80% off the viewport edge would be missed. Only fully off-screen elements trigger this check.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- OVERLAP -->
+  <div class="accordion" id="check-overlap">
+    <button class="accordion-trigger" onclick="toggleAccordion(this)">
+      <svg class="accordion-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
+      <div class="accordion-summary">
+        Overlap
+        <div class="accordion-hint">High z-index element clipped while overlapping lower elements</div>
+      </div>
+      <span class="accordion-badge badge-lint">LINT</span>
+    </button>
+    <div class="accordion-body">
+      <div class="accordion-content">
+        <p>Detects two positioned elements (both with <code>z-index &gt; 0</code>) that overlap spatially, where the <strong>higher z-index element is clipped</strong> by an ancestor's overflow.</p>
+
+        <p>This catches stacking context traps: a tooltip with <code>z-index: 9999</code> that's clipped because a parent has <code>opacity: 0.99</code> (creating a new stacking context).</p>
+
+        <p><strong>Conditions:</strong></p>
+        <ul>
+          <li>Both elements have <code>z-index &gt; 0</code></li>
+          <li>Their bounding boxes overlap</li>
+          <li>The higher z-index element has <code>clip.isClipped: true</code></li>
+        </ul>
+
+        <div class="callout callout-warn">
+          <strong>Gap:</strong> Elements with <code>z-index: 0</code> (the default for most positioned elements) are never checked for overlap.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- BROKEN SCROLL -->
+  <div class="accordion" id="check-scroll">
+    <button class="accordion-trigger" onclick="toggleAccordion(this)">
+      <svg class="accordion-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
+      <div class="accordion-summary">
+        Broken Scroll
+        <div class="accordion-hint">Scroll removed while content still overflows</div>
+      </div>
+      <span class="accordion-badge badge-regression">REGRESSION</span>
+    </button>
+    <div class="accordion-body">
+      <div class="accordion-content">
+        <p>Detects containers whose overflow changed from scrollable (<code>auto</code>/<code>scroll</code>) to non-scrollable (<code>hidden</code>/<code>clip</code>) while content still exceeds the visible area.</p>
+
+        <p><strong>Why regression only:</strong> A single snapshot of <code>overflow: hidden</code> with <code>scrollHeight &gt; height</code> is ambiguous &mdash; it could be a carousel, slider, or masked layout. But <code>overflow: auto &rarr; hidden</code> with content still overflowing is definitive: content that was reachable is now inaccessible.</p>
+
+        <p><strong>Conditions:</strong></p>
+        <ul>
+          <li>Overflow changed from <code>auto</code>/<code>scroll</code> to <code>hidden</code>/<code>clip</code></li>
+          <li><code>scrollHeight &gt; height</code> (or <code>scrollWidth &gt; width</code>)</li>
+          <li>Checks per-axis: <code>overflowX</code> and <code>overflowY</code> independently</li>
+        </ul>
+
+        <p><strong>What does NOT trigger:</strong></p>
+        <ul>
+          <li><code>hidden &rarr; hidden</code> (always was hidden, probably intentional)</li>
+          <li><code>visible &rarr; hidden</code> (visible never had a scrollbar)</li>
+          <li>Overflow changed but content fits (<code>scrollHeight &le; height</code>)</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- VISIBILITY -->
+  <div class="accordion" id="check-visibility">
+    <button class="accordion-trigger" onclick="toggleAccordion(this)">
+      <svg class="accordion-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
+      <div class="accordion-summary">
+        Visibility
+        <div class="accordion-hint">Elements that disappeared or became hidden</div>
+      </div>
+      <span class="accordion-badge badge-regression">REGRESSION</span>
+    </button>
+    <div class="accordion-body">
+      <div class="accordion-content">
+        <p>Detects elements that:</p>
+        <ul>
+          <li><strong>Disappeared entirely</strong> &mdash; present in baseline, absent in current</li>
+          <li><strong>Became hidden</strong> &mdash; <code>visibility: visible &rarr; hidden</code></li>
+          <li><strong>Became transparent</strong> &mdash; <code>opacity: 1 &rarr; 0</code></li>
+        </ul>
+        <p>New elements appearing in the current model are <strong>not flagged</strong> (new features aren't regressions).</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- SPACING -->
+  <div class="accordion" id="check-spacing">
+    <button class="accordion-trigger" onclick="toggleAccordion(this)">
+      <svg class="accordion-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
+      <div class="accordion-summary">
+        Spacing
+        <div class="accordion-hint">Sibling gaps changed beyond threshold</div>
+      </div>
+      <span class="accordion-badge badge-regression">REGRESSION</span>
+    </button>
+    <div class="accordion-body">
+      <div class="accordion-content">
+        <p>Flags when the gap between sibling elements changed beyond <code>spacingThreshold</code> (default: 4px). Also detects <strong>inconsistent spacing</strong> within a group of siblings (one gap is an outlier from the group median).</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- POSITION -->
+  <div class="accordion" id="check-position">
+    <button class="accordion-trigger" onclick="toggleAccordion(this)">
+      <svg class="accordion-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
+      <div class="accordion-summary">
+        Position
+        <div class="accordion-hint">Element shifted beyond threshold</div>
+      </div>
+      <span class="accordion-badge badge-regression">REGRESSION</span>
+    </button>
+    <div class="accordion-body">
+      <div class="accordion-content">
+        <p>Flags when an element moved beyond <code>positionThreshold</code> (default: 20px) on either axis. Reports the delta in both x and y directions.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- SIZE -->
+  <div class="accordion" id="check-size">
+    <button class="accordion-trigger" onclick="toggleAccordion(this)">
+      <svg class="accordion-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
+      <div class="accordion-summary">
+        Size
+        <div class="accordion-hint">Width or height changed significantly</div>
+      </div>
+      <span class="accordion-badge badge-regression">REGRESSION</span>
+    </button>
+    <div class="accordion-body">
+      <div class="accordion-content">
+        <p>Flags when width or height changed by more than <code>sizeChangePercent</code> (default: 30%). Only checks elements that had non-zero dimensions in the baseline.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ INTENT SUPPRESSION ═══ -->
+<div class="section" id="intent">
+  <div class="section-title">Intent Suppression</div>
+
+  <div class="accordion">
+    <button class="accordion-trigger" onclick="toggleAccordion(this)">
+      <svg class="accordion-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
+      <div class="accordion-summary">
+        Intent Suppression
+        <div class="accordion-hint">How Boxy distinguishes intentional hiding from bugs</div>
+      </div>
+    </button>
+    <div class="accordion-body">
+      <div class="accordion-content">
+        <p>Boxy skips checks on elements that are <strong>intentionally invisible to all users</strong>:</p>
+
+        <table class="doc-table">
+          <thead>
+            <tr><th>Pattern</th><th>Detection</th><th>Result</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>visibility: hidden</td><td>Visually invisible</td><td>Suppressed</td></tr>
+            <tr><td>opacity: 0</td><td>Fully transparent</td><td>Suppressed</td></tr>
+            <tr><td>hasVisibleContent: false</td><td>No rendered content</td><td>Suppressed</td></tr>
+            <tr><td>sr-only pattern</td><td>absolute, 1&times;1px, off-screen</td><td>Suppressed</td></tr>
+            <tr><td>aria-hidden (alone)</td><td>Only hides from AT, not visually</td><td><strong>NOT suppressed</strong></td></tr>
+          </tbody>
+        </table>
+
+        <div class="callout callout-warn">
+          <strong><code>aria-hidden="true"</code> does NOT suppress checks.</strong> This attribute only removes an element from the accessibility tree &mdash; it doesn't mean the element is visually hidden. Decorative Font Awesome icons, SVG icons, and duplicate text commonly use <code>aria-hidden</code> while remaining fully visible and renderable. Clipping a visible <code>aria-hidden</code> element is still a visual bug.
+        </div>
+
+        <p>Suppression only activates when the element is invisible to <strong>both</strong> sighted users and assistive technology.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ SPATIAL MODEL ═══ -->
+<div class="section" id="spatial-model">
+  <div class="section-title">Spatial Model</div>
+
+  <div class="accordion">
+    <button class="accordion-trigger" onclick="toggleAccordion(this)">
+      <svg class="accordion-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
+      <div class="accordion-summary">
+        ElementModel
+        <div class="accordion-hint">What's captured per element</div>
+      </div>
+    </button>
+    <div class="accordion-body">
+      <div class="accordion-content">
+        <p>Each visible element is captured as an <code>ElementModel</code> with these properties:</p>
+
+        <div class="prop-list">
+          <div class="prop-item"><span class="prop-name">selector</span> <span class="prop-type">string</span></div>
+          <div class="prop-item"><span class="prop-name">tag</span> <span class="prop-type">string</span></div>
+          <div class="prop-item"><span class="prop-name">box</span> <span class="prop-type">{x, y, width, height}</span></div>
+          <div class="prop-item"><span class="prop-name">zIndex</span> <span class="prop-type">number</span></div>
+          <div class="prop-item"><span class="prop-name">depth</span> <span class="prop-type">number</span></div>
+          <div class="prop-item"><span class="prop-name">position</span> <span class="prop-type">string</span></div>
+          <div class="prop-item"><span class="prop-name">overflow</span> <span class="prop-type">string</span></div>
+          <div class="prop-item"><span class="prop-name">scroll</span> <span class="prop-type">{scrollWidth, scrollHeight, overflowX, overflowY}</span></div>
+          <div class="prop-item"><span class="prop-name">clip</span> <span class="prop-type">{isClipped, clippedBy, clippedEdges}</span></div>
+          <div class="prop-item"><span class="prop-name">siblingSpacing</span> <span class="prop-type">{previousGap, nextGap, direction}</span></div>
+          <div class="prop-item"><span class="prop-name">parentSelector</span> <span class="prop-type">string | null</span></div>
+          <div class="prop-item"><span class="prop-name">childCount</span> <span class="prop-type">number</span></div>
+          <div class="prop-item"><span class="prop-name">hasVisibleContent</span> <span class="prop-type">boolean</span></div>
+          <div class="prop-item"><span class="prop-name">visibility</span> <span class="prop-type">string</span></div>
+          <div class="prop-item"><span class="prop-name">opacity</span> <span class="prop-type">string</span></div>
+          <div class="prop-item"><span class="prop-name">ariaHidden</span> <span class="prop-type">boolean</span></div>
+          <div class="prop-item"><span class="prop-name">role</span> <span class="prop-type">string | null</span></div>
+          <div class="prop-item"><span class="prop-name">styles</span> <span class="prop-type">Record&lt;string, string&gt;</span></div>
+        </div>
+
+        <p>The <code>styles</code> object captures computed values for layout-relevant CSS properties: display, position, overflow, width, height, margin, padding, flex properties, grid properties, transform, and clip-path.</p>
+
+        <div class="callout callout-info">
+          <strong>Scope captures portaled elements.</strong> When using <code>scope</code>, Boxy captures both DOM descendants and any element whose bounding box overlaps the scope element's bounds. This catches React portals, Radix popovers, and other elements appended to <code>&lt;body&gt;</code> that visually appear within the scoped area.
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ CONFIGURATION ═══ -->
+<div class="section" id="configuration">
+  <div class="section-title">Configuration</div>
+
+  <div class="accordion">
+    <button class="accordion-trigger" onclick="toggleAccordion(this)">
+      <svg class="accordion-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
+      <div class="accordion-summary">
+        LinterConfig
+        <div class="accordion-hint">Thresholds, ignore patterns, and sensitivity tuning</div>
+      </div>
+    </button>
+    <div class="accordion-body">
+      <div class="accordion-content">
+        <table class="doc-table">
+          <thead>
+            <tr><th>Option</th><th>Default</th><th>Description</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>spacingThreshold</td><td>4px</td><td>Sibling spacing changes below this are ignored</td></tr>
+            <tr><td>positionThreshold</td><td>20px</td><td>Position shifts below this are ignored</td></tr>
+            <tr><td>sizeChangePercent</td><td>30%</td><td>Size changes below this percentage are ignored</td></tr>
+            <tr><td>collapsedMinSize</td><td>5px</td><td>Elements smaller than this (with content) are flagged as collapsed</td></tr>
+            <tr><td>ignore</td><td>[]</td><td>Array of selector patterns to skip (uses <code>string.includes()</code> matching)</td></tr>
+          </tbody>
+        </table>
+
+<pre><code><span class="kw">const</span> boxy = <span class="fn">createBoxy</span>({
+  config: {
+    spacingThreshold: <span class="num">4</span>,
+    positionThreshold: <span class="num">20</span>,
+    sizeChangePercent: <span class="num">30</span>,
+    collapsedMinSize: <span class="num">5</span>,
+    ignore: [
+      <span class="str">'.scrollable-list'</span>,
+      <span class="str">'[data-testid="carousel"]'</span>,
+    ],
+  },
+});</code></pre>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ KNOWN LIMITATIONS ═══ -->
+<div class="section" id="limitations">
+  <div class="section-title">Known Limitations</div>
+
+  <div class="accordion">
+    <button class="accordion-trigger" onclick="toggleAccordion(this)">
+      <svg class="accordion-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
+      <div class="accordion-summary">
+        False Positives
+        <div class="accordion-hint">Things the linter may incorrectly flag</div>
+      </div>
+    </button>
+    <div class="accordion-body">
+      <div class="accordion-content">
+        <ul>
+          <li><strong>Closed menus/dropdowns</strong> &mdash; An absolute-positioned dropdown in its closed state (clipped by parent) looks identical to a broken one. Fix: capture after opening, or add to <code>config.ignore</code>.</li>
+          <li><strong>Animation mid-states</strong> &mdash; Elements captured during CSS transitions may appear clipped or off-screen temporarily. Fix: wait for animations to settle before capturing.</li>
+          <li><strong>Intentional decorative overflow</strong> &mdash; Some designs let absolute elements overflow and get clipped (glow effects, rotated badges). Fix: add to <code>config.ignore</code>.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="accordion">
+    <button class="accordion-trigger" onclick="toggleAccordion(this)">
+      <svg class="accordion-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
+      <div class="accordion-summary">
+        False Negatives
+        <div class="accordion-hint">Things the linter may miss</div>
+      </div>
+    </button>
+    <div class="accordion-body">
+      <div class="accordion-content">
+        <ul>
+          <li><strong>Partially off-screen elements</strong> &mdash; Only fully off-screen triggers. A dropdown 80% off the viewport edge is missed.</li>
+          <li><strong><code>position: relative</code> clipping</strong> &mdash; Only <code>absolute</code>/<code>fixed</code> elements trigger CLIPPING.</li>
+          <li><strong><code>contain: paint</code></strong> &mdash; Acts like <code>overflow: hidden</code> but not detected by the capture layer.</li>
+          <li><strong><code>z-index: 0</code> overlap</strong> &mdash; Only elements with <code>z-index &gt; 0</code> are checked for overlap.</li>
+          <li><strong>JS-driven scroll</strong> &mdash; Can't detect if <code>overflow: hidden</code> + JavaScript provides scrollability (carousels, virtual scroll). Regression mode catches this if overflow changed.</li>
+          <li><strong>Non-spatial visual changes</strong> &mdash; Color, font, shadow, border-radius changes are not detected unless they cause spatial side-effects.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ API REFERENCE ═══ -->
+<div class="section" id="api">
+  <div class="section-title">API Reference</div>
+
+  <div class="accordion">
+    <button class="accordion-trigger" onclick="toggleAccordion(this)">
+      <svg class="accordion-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
+      <div class="accordion-summary">
+        createBoxy(options)
+        <div class="accordion-hint">Create a Boxy instance for capturing and reporting</div>
+      </div>
+    </button>
+    <div class="accordion-body">
+      <div class="accordion-content">
+<pre><code><span class="kw">import</span> { <span class="fn">createBoxy</span> } <span class="kw">from</span> <span class="str">'boxy-layout'</span>;
+
+<span class="kw">const</span> boxy = <span class="fn">createBoxy</span>({
+  snapshotDir: <span class="str">'.boxy'</span>,           <span class="cmt">// where to store baselines</span>
+  allowMissingBaseline: <span class="num">false</span>,    <span class="cmt">// fail when baseline missing</span>
+  config: { <span class="cmt">/* LinterConfig */</span> },
+});</code></pre>
+      </div>
+    </div>
+  </div>
+
+  <div class="accordion">
+    <button class="accordion-trigger" onclick="toggleAccordion(this)">
+      <svg class="accordion-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
+      <div class="accordion-summary">
+        boxy.capture(page, { name, scope })
+        <div class="accordion-hint">Capture spatial model from a Playwright page</div>
+      </div>
+    </button>
+    <div class="accordion-body">
+      <div class="accordion-content">
+<pre><code><span class="cmt">// Capture entire page</span>
+<span class="kw">await</span> boxy.<span class="fn">capture</span>(page, { name: <span class="str">'dashboard'</span> });
+
+<span class="cmt">// Scope to a specific component</span>
+<span class="kw">await</span> boxy.<span class="fn">capture</span>(page, {
+  name: <span class="str">'action-menu'</span>,
+  scope: <span class="str">'[data-testid="users-table"]'</span>,
+});</code></pre>
+        <p>Scope captures DOM descendants <strong>plus</strong> any element whose bounds overlap the scope area (catches portaled elements).</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="accordion">
+    <button class="accordion-trigger" onclick="toggleAccordion(this)">
+      <svg class="accordion-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
+      <div class="accordion-summary">
+        boxy.report() / boxy.writeHTMLReport()
+        <div class="accordion-hint">Output results to terminal or HTML file</div>
+      </div>
+    </button>
+    <div class="accordion-body">
+      <div class="accordion-content">
+<pre><code><span class="cmt">// Print to terminal, returns exit code (1 if errors)</span>
+<span class="kw">const</span> exitCode = boxy.<span class="fn">report</span>();
+
+<span class="cmt">// Generate HTML report at .boxy/report.html</span>
+boxy.<span class="fn">writeHTMLReport</span>();
+
+<span class="cmt">// Check programmatically</span>
+<span class="kw">if</span> (boxy.<span class="fn">hasErrors</span>()) process.<span class="fn">exit</span>(<span class="num">1</span>);</code></pre>
+      </div>
+    </div>
+  </div>
+
+  <div class="accordion">
+    <button class="accordion-trigger" onclick="toggleAccordion(this)">
+      <svg class="accordion-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
+      <div class="accordion-summary">
+        lint(model, config) / compare(baseline, current, config)
+        <div class="accordion-hint">Low-level analysis functions</div>
+      </div>
+    </button>
+    <div class="accordion-body">
+      <div class="accordion-content">
+<pre><code><span class="kw">import</span> { <span class="fn">lint</span>, <span class="fn">compare</span> } <span class="kw">from</span> <span class="str">'boxy-layout'</span>;
+
+<span class="cmt">// Static lint &mdash; single snapshot</span>
+<span class="kw">const</span> issues = <span class="fn">lint</span>(model);
+<span class="kw">const</span> issues = <span class="fn">lint</span>(model, { collapsedMinSize: <span class="num">10</span> });
+
+<span class="cmt">// Regression compare &mdash; baseline vs current</span>
+<span class="kw">const</span> issues = <span class="fn">compare</span>(baseline, current);
+<span class="kw">const</span> issues = <span class="fn">compare</span>(baseline, current, {
+  positionThreshold: <span class="num">10</span>,
+});</code></pre>
+        <p>Both return <code>Issue[]</code> with category, severity, selector, title, detail, and optional styleChanges/affectedChildren.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+</main>
+</div>
+
+<script>
+function toggleAccordion(trigger) {
+  const accordion = trigger.parentElement;
+  accordion.classList.toggle('open');
+}
+
+// Scroll spy for TOC
+const tocLinks = document.querySelectorAll('.toc-link');
+const sections = [];
+
+tocLinks.forEach(link => {
+  const href = link.getAttribute('href');
+  if (href && href.startsWith('#')) {
+    const target = document.getElementById(href.slice(1));
+    if (target) sections.push({ link, target });
+  }
+});
+
+function updateScrollSpy() {
+  const scrollY = window.scrollY + 80;
+  let current = sections[0];
+
+  for (const s of sections) {
+    if (s.target.offsetTop <= scrollY) {
+      current = s;
+    }
+  }
+
+  tocLinks.forEach(l => l.classList.remove('active'));
+  if (current) current.link.classList.add('active');
+}
+
+window.addEventListener('scroll', updateScrollSpy, { passive: true });
+updateScrollSpy();
+</script>
+
+</body>
+</html>
