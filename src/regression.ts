@@ -70,10 +70,12 @@ export function compare(baseline: SpatialModel, current: SpatialModel, config: P
       });
     }
 
-    // 4. Size change
-    if (baseEl.box.width > 0 && baseEl.box.height > 0) {
-      const wChange = Math.abs(currEl.box.width - baseEl.box.width) / baseEl.box.width * 100;
-      const hChange = Math.abs(currEl.box.height - baseEl.box.height) / baseEl.box.height * 100;
+    // 4. Size change (check each axis independently to avoid division by zero)
+    if (baseEl.box.width > 0 || baseEl.box.height > 0) {
+      const wChange = baseEl.box.width > 0
+        ? Math.abs(currEl.box.width - baseEl.box.width) / baseEl.box.width * 100 : 0;
+      const hChange = baseEl.box.height > 0
+        ? Math.abs(currEl.box.height - baseEl.box.height) / baseEl.box.height * 100 : 0;
 
       if (wChange > cfg.sizeChangePercent || hChange > cfg.sizeChangePercent) {
         issues.push({
@@ -195,22 +197,26 @@ function detectSpacingInconsistency(baseline: SpatialModel, current: SpatialMode
 
     const gaps = children
       .map(c => c.siblingSpacing.previousGap)
-      .filter((g): g is number => g !== null && g >= 0);
+      .filter((g): g is number => g !== null);
 
     if (gaps.length < 2) continue;
 
     // Calculate median gap
     const sorted = [...gaps].sort((a, b) => a - b);
-    const median = sorted[Math.floor(sorted.length / 2)];
+    const mid = Math.floor(sorted.length / 2);
+    const median = sorted.length % 2 === 0
+      ? (sorted[mid - 1] + sorted[mid]) / 2
+      : sorted[mid];
 
     // Find outliers
     for (let i = 0; i < children.length; i++) {
       const child = children[i];
       const gap = child.siblingSpacing.previousGap;
-      if (gap === null || gap < 0) continue;
+      if (gap === null) continue;
 
       const deviation = Math.abs(gap - median);
-      if (deviation > cfg.spacingThreshold && median > 0 && deviation / median > 0.3) {
+      const absMedian = Math.abs(median);
+      if (deviation > cfg.spacingThreshold && absMedian > 0 && deviation / absMedian > 0.3) {
         issues.push({
           category: 'SPACING',
           severity: 'warning',

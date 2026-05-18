@@ -102,6 +102,8 @@ export function captureScope(scope: string) {
             clippedEdges: edges,
           };
         }
+        // Element fits within this clipping ancestor — continue checking
+        // grandparents because the element might overflow a higher ancestor.
       }
       parent = parent.parentElement;
     }

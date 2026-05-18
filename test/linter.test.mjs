@@ -379,10 +379,10 @@ test('Zero-dimension but has content — COLLAPSED', () => {
   });
   const model = makeModel([el]);
   const issues = lint(model);
-  // width: 0 is NOT > 0, so checkCollapsed won't flag it (it checks width > 0 && width < threshold)
-  // This is actually how the code works — zero-width elements are filtered at capture time
-  // The linter only flags elements with width BETWEEN 0 and threshold (exclusive)
-  assert.equal(issues.length, 0);
+  // width: 0 is < collapsedMinSize (5), so checkCollapsed flags it
+  const collapsed = issues.filter(i => i.category === 'COLLAPSED');
+  assert.equal(collapsed.length, 1);
+  assert.ok(collapsed[0].detail.includes('width'));
 });
 
 // ============================================================
@@ -806,11 +806,11 @@ test('Element with hasVisibleContent:false — not flagged for COLLAPSED', () =>
   assert.equal(issues.filter(i => i.category === 'COLLAPSED').length, 0);
 });
 
-test('sr-only pattern (absolute, 1x1, off-screen) — not flagged OFF_SCREEN', () => {
+test('sr-only pattern (absolute, 1x1, large negative coords) — not flagged OFF_SCREEN', () => {
   const el = makeElement({
     selector: '[data-testid="skip-link"]',
     position: 'absolute',
-    box: { x: -9999, y: 0, width: 1, height: 1 },
+    box: { x: -10000, y: 0, width: 1, height: 1 },
     hasVisibleContent: true,
     childCount: 1,
   });
@@ -822,7 +822,7 @@ test('sr-only pattern — not flagged COLLAPSED', () => {
   const el = makeElement({
     selector: '.sr-only',
     position: 'absolute',
-    box: { x: -9999, y: 0, width: 1, height: 1 },
+    box: { x: -10000, y: 0, width: 1, height: 1 },
     hasVisibleContent: true,
     childCount: 1,
   });

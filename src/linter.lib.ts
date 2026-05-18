@@ -20,11 +20,13 @@ export function isIntentionallyHidden(el: ElementModel): boolean {
   if (!el.hasVisibleContent) return true;
 
   // sr-only / visually-hidden pattern:
-  // position:absolute, dimensions ≤ 1px, off-screen
+  // position:absolute, dimensions ≤ 1px, positioned off-screen via negative coords
   // These ARE visible to screen readers (no aria-hidden) but invisible to sighted users
+  // Only match negative coordinates (the universal sr-only technique), not large positive
+  // values which could be real elements on ultra-wide displays.
   if (el.position === 'absolute' &&
       el.box.width <= 1 && el.box.height <= 1 &&
-      (el.box.x < 0 || el.box.y < 0 || el.box.x > 9000)) {
+      (el.box.x < -9000 || el.box.y < -9000)) {
     return true;
   }
 
@@ -36,8 +38,8 @@ export function isIntentionallyHidden(el: ElementModel): boolean {
 }
 
 export function boxesOverlap(a: BoundingBox, b: BoundingBox): boolean {
-  return a.x < b.x + b.width && a.x + a.width > b.x &&
-         a.y < b.y + b.height && a.y + a.height > b.y;
+  return a.x <= b.x + b.width && a.x + a.width >= b.x &&
+         a.y <= b.y + b.height && a.y + a.height >= b.y;
 }
 
 export function checkClipping(el: ElementModel): Issue | null {
@@ -74,7 +76,7 @@ export function checkCollapsed(el: ElementModel, collapsedMinSize: number): Issu
 
   const issues: Issue[] = [];
 
-  if (el.box.width > 0 && el.box.width < collapsedMinSize) {
+  if (el.box.width < collapsedMinSize) {
     issues.push({
       category: 'COLLAPSED',
       severity: 'error',
@@ -84,7 +86,7 @@ export function checkCollapsed(el: ElementModel, collapsedMinSize: number): Issu
     });
   }
 
-  if (el.box.height > 0 && el.box.height < collapsedMinSize) {
+  if (el.box.height < collapsedMinSize) {
     issues.push({
       category: 'COLLAPSED',
       severity: 'error',
