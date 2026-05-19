@@ -114,9 +114,9 @@ export interface LinterConfig {
 }
 
 export const DEFAULT_CONFIG: LinterConfig = {
-  spacingThreshold: 4,
-  positionThreshold: 20,
-  sizeChangePercent: 30,
+  spacingThreshold: 2,
+  positionThreshold: 2,
+  sizeChangePercent: 5,
   collapsedMinSize: 5,
   ignore: [],
 };
