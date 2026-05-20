@@ -471,6 +471,49 @@ test('Ignore list — element is skipped', () => {
   assert.equal(issues.length, 0);
 });
 
+test('Ignore list — CSS-looking selectors are not arbitrary substrings', () => {
+  const el = makeElement({
+    selector: '[data-testid="my-dropdownish"]',
+    position: 'absolute',
+    clip: {
+      isClipped: true,
+      clippedBy: '[data-testid="parent"]',
+      clippedEdges: { top: 0, bottom: 50, left: 0, right: 0 },
+    },
+  });
+  const issues = lint(makeModel([el]), { ignore: ['[data-testid="dropdown"]'] });
+  assert.equal(issues.length, 1);
+});
+
+test('Sticky clipped element — CLIPPING', () => {
+  const el = makeElement({
+    selector: '[data-testid="sticky-toolbar"]',
+    position: 'sticky',
+    clip: {
+      isClipped: true,
+      clippedBy: '[data-testid="panel"]',
+      clippedEdges: { top: 0, bottom: 20, left: 0, right: 0 },
+    },
+  });
+  const issues = lint(makeModel([el]));
+  assert.equal(issues.filter(i => i.category === 'CLIPPING').length, 1);
+});
+
+test('Transformed clipped element — CLIPPING', () => {
+  const el = makeElement({
+    selector: '[data-testid="transformed-menu"]',
+    position: 'relative',
+    styles: { transform: 'translateY(20px)' },
+    clip: {
+      isClipped: true,
+      clippedBy: '[data-testid="panel"]',
+      clippedEdges: { top: 0, bottom: 20, left: 0, right: 0 },
+    },
+  });
+  const issues = lint(makeModel([el]));
+  assert.equal(issues.filter(i => i.category === 'CLIPPING').length, 1);
+});
+
 test('Zero-dimension element — linter does not crash', () => {
   const el = makeElement({
     selector: '[data-testid="zero"]',

@@ -228,6 +228,24 @@ test('New element appeared — no issue', () => {
   assert.equal(newIssues.length, 0);
 });
 
+test('CSS diffs attach without data-testid ancestor', () => {
+  const baseEl = makeElement({
+    selector: '.panel > .item',
+    box: { x: 0, y: 0, width: 100, height: 50 },
+    styles: { margin: '0px' },
+    hasVisibleContent: true,
+  });
+  const currEl = makeElement({
+    selector: '.panel > .item',
+    box: { x: 40, y: 0, width: 100, height: 50 },
+    styles: { margin: '40px' },
+    hasVisibleContent: true,
+  });
+  const issues = compare(makeModel([baseEl]), makeModel([currEl]), { positionThreshold: 20 });
+  const pos = issues.find(i => i.category === 'POSITION');
+  assert.ok(pos?.styleChanges?.some(sc => sc.property === 'margin'), 'style changes should be attached without data-testid');
+});
+
 // ============================================================
 // BROKEN SCROLL REGRESSION (overflow changed from scrollable to non-scrollable)
 // ============================================================

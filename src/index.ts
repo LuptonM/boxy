@@ -201,7 +201,7 @@ export function createBoxy(options: BoxyOptions = {}) {
     },
 
     /**
-     * Verify root causes by re-rendering with individual CSS changes.
+     * Verify root causes by temporarily reverting individual CSS changes.
      * Must be called while the page is still in the same state as the capture.
      * Returns a CausationResult for the given step.
      */

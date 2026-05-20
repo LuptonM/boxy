@@ -1,6 +1,6 @@
 import type { SpatialModel, Issue, LinterConfig, ElementModel, StyleChange } from './types.js';
 import { DEFAULT_CONFIG } from './types.js';
-import { isIntentionallyHidden, boxesOverlap } from './linter.lib.js';
+import { isIntentionallyHidden, boxesOverlap, isIgnored } from './linter.lib.js';
 
 /**
  * Compare current spatial model against baseline — detect regressions.
@@ -424,7 +424,7 @@ function collectStyleChangesUnderTestId(
 ): StyleChange[] {
   // Find the nearest testid ancestor
   const testIdAncestor = findTestIdAncestor(selector, baseMap, currMap);
-  if (!testIdAncestor) return [];
+  const rootSelector = testIdAncestor ?? selector;
 
   const changes: StyleChange[] = [];
   const seen = new Set<string>();
@@ -443,10 +443,10 @@ function collectStyleChangesUnderTestId(
   };
 
   // 1. Diff the testid ancestor itself
-  diffOne(testIdAncestor);
+  diffOne(rootSelector);
 
   // 2. Diff ancestors of the testid container (up 2 levels — catches e.g. layout wrapper changes)
-  let parent: string | null = testIdAncestor;
+  let parent: string | null = rootSelector;
   for (let i = 0; i < 2; i++) {
     const ancestor: ElementModel | undefined = currMap.get(parent!) ?? baseMap.get(parent!);
     if (!ancestor?.parentSelector || ancestor.parentSelector === parent) break;
@@ -456,7 +456,7 @@ function collectStyleChangesUnderTestId(
 
   // 3. Diff all elements whose selector starts with the testid ancestor
   //    (i.e. children/descendants of the container)
-  const prefix = testIdAncestor;
+  const prefix = rootSelector;
   for (const sel of baseMap.keys()) {
     if (sel === prefix || sel.startsWith(prefix + ' ')) {
       diffOne(sel);
@@ -471,7 +471,7 @@ function collectStyleChangesUnderTestId(
   // 4. For clipping: also check the clipping ancestor and its subtree
   if (clippedBy) {
     const clipTestId = findTestIdAncestor(clippedBy, baseMap, currMap);
-    if (clipTestId && clipTestId !== testIdAncestor) {
+    if (clipTestId && clipTestId !== rootSelector) {
       diffOne(clipTestId);
       for (const sel of baseMap.keys()) {
         if (sel === clipTestId || sel.startsWith(clipTestId + ' ')) {
@@ -489,8 +489,4 @@ function collectStyleChangesUnderTestId(
   }
 
   return changes;
-}
-
-function isIgnored(selector: string, ignoreList: string[]): boolean {
-  return ignoreList.some(pattern => selector.includes(pattern));
 }

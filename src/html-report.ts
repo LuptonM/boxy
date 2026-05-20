@@ -3,16 +3,21 @@ import type { StepResult, Issue } from './types.js';
 const CATEGORY_ORDER = ['CLIPPING', 'OVERLAP', 'COLLAPSED', 'OFF_SCREEN', 'SPACING', 'POSITION', 'SIZE', 'VISIBILITY'] as const;
 
 export function generateHTMLReport(steps: StepResult[]): string {
-  const totalErrors = steps.reduce((sum, s) => sum + s.issues.filter(i => i.severity === 'error').length, 0);
+  const totalErrors = steps.reduce((sum, s) =>
+    sum + s.issues.filter(i => i.severity === 'error').length +
+    (s.notices ?? []).filter(n => n.severity === 'error').length, 0);
   const totalWarnings = steps.reduce((sum, s) => sum + s.issues.filter(i => i.severity === 'warning').length, 0);
   const passed = totalErrors === 0 && totalWarnings === 0;
 
   const stepsHTML = steps.map(step => {
     const errors = step.issues.filter(i => i.severity === 'error').length;
     const warnings = step.issues.filter(i => i.severity === 'warning').length;
-    const hasFailed = step.issues.length > 0;
+    const notices = step.notices ?? [];
+    const noticeErrors = notices.filter(n => n.severity === 'error').length;
+    const hasFailed = step.issues.length > 0 || noticeErrors > 0;
 
     const issuesHTML = hasFailed ? renderIssues(step.issues) : '';
+    const noticesHTML = notices.length > 0 ? renderNotices(notices) : '';
 
     let screenshotHTML = '';
     if (step.baselineScreenshotPath && step.screenshotPath) {
@@ -36,9 +41,10 @@ export function generateHTMLReport(steps: StepResult[]): string {
         <div class="step-header">
           <span class="step-icon">${hasFailed ? '✗' : '✓'}</span>
           <span class="step-name">${esc(step.name)}</span>
-          ${hasFailed ? `<span class="step-count">${errors} errors, ${warnings} warnings</span>` : ''}
+          ${hasFailed || notices.length > 0 ? `<span class="step-count">${errors + noticeErrors} errors, ${warnings} warnings, ${notices.length} notices</span>` : ''}
         </div>
         ${screenshotHTML}
+        ${noticesHTML}
         ${issuesHTML}
       </div>`;
   }).join('');
@@ -89,6 +95,12 @@ body{font-family:Inter,system-ui,sans-serif;background:#0f172a;color:#e2e8f0;pad
 .issue-title{font-size:13px;font-weight:600;color:white}
 .issue-sel{font-size:11px;color:#60a5fa;font-family:'JetBrains Mono',monospace;word-break:break-all;margin:2px 0}
 .issue-detail{font-size:11px;color:#94a3b8;font-family:'JetBrains Mono',monospace;white-space:pre-wrap;line-height:1.5}
+.notices{padding:16px 20px;border-bottom:1px solid #334155}
+.notice{padding:8px 0}
+.notice-title{font-size:13px;font-weight:600;color:white}
+.notice.error .notice-title{color:#f87171}
+.notice.info .notice-title{color:#60a5fa}
+.notice-detail{font-size:11px;color:#94a3b8;font-family:'JetBrains Mono',monospace;white-space:pre-wrap;line-height:1.5;margin-top:3px}
 </style>
 </head>
 <body>
@@ -105,6 +117,14 @@ body{font-family:Inter,system-ui,sans-serif;background:#0f172a;color:#e2e8f0;pad
 <div class="steps">${stepsHTML}</div>
 </body>
 </html>`;
+}
+
+function renderNotices(notices: NonNullable<StepResult['notices']>): string {
+  return '<div class="notices">' + notices.map(notice => `
+    <div class="notice ${notice.severity === 'error' ? 'error' : 'info'}">
+      <div class="notice-title">${esc(notice.title)}</div>
+      <div class="notice-detail">${esc(notice.detail)}</div>
+    </div>`).join('') + '</div>';
 }
 
 function renderIssues(issues: Issue[]): string {

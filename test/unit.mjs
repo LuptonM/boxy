@@ -84,6 +84,10 @@ await withEnv('LAYOUT_INIT', undefined, async () => {
   assert.equal(step.issues.length, 0, 'auto-created baseline should not be reported as a regression issue');
   assert.equal(boxy.hasErrors(), true, 'auto-created baseline should fail by default');
   assert.equal(boxy.report(), 1, 'report should fail when a baseline is created by default');
+  const htmlPath = boxy.writeHTMLReport();
+  const html = fs.readFileSync(htmlPath, 'utf-8');
+  assert.ok(html.includes('FAIL'), 'HTML report should fail when a baseline-created notice is an error');
+  assert.ok(html.includes('Baseline created'), 'HTML report should render baseline notices');
 
   const baselinePath = path.join(dir, 'baseline', 'auto-saved.json');
   assert.ok(fs.existsSync(baselinePath), 'baseline should be auto-saved on first run');
