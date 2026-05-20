@@ -1,16 +1,17 @@
 import type { Page } from 'playwright';
-import type { SpatialModel, StyleChange, CausationResult, ElementModel } from './types.js';
-import { capture } from './capture.js';
+import type { SpatialModel, StyleChange, CausationResult } from './types.js';
+import { captureScope } from './capture.lib.js';
 
 /**
- * Verify causation by re-rendering with individual CSS changes applied.
+ * Verify causation by reverting individual CSS changes.
  *
- * For each unique style change, applies ONLY that change to the baseline page
- * and recaptures the spatial model. If the model differs from baseline,
- * that change is a verified root cause.
+ * For each unique style change, temporarily reverts that change from the
+ * current page back toward the baseline value and recaptures the spatial model.
+ * If the revert reduces the current-vs-baseline spatial diff, that change is
+ * a verified contributor.
  *
- * Groups changes by element first — if all changes on an element are inert together,
- * skip individual testing. If the group is causal, bisect to find which properties matter.
+ * Groups changes by element first. If reverting the group helps, test each
+ * property to find which ones improve the current-vs-baseline diff.
  */
 export async function analyzeCausation(
   page: Page,
@@ -44,27 +45,27 @@ export async function analyzeCausation(
     bySelector.get(sc.selector)!.push(sc);
   }
 
-  const baselineMap = new Map(baselineModel.elements.map(el => [el.selector, el]));
+  const currentModel = await captureModel(page, scope);
+  const currentDiffs = countSpatialDiffs(baselineModel, currentModel);
 
   for (const [selector, changes] of bySelector) {
-    // Phase 1: Test all changes on this element together
-    const groupModel = await renderWithChanges(page, scope, selector, changes);
+    // Phase 1: Test all changes on this element together by reverting them.
+    const groupModel = await renderWithRevertedChanges(page, scope, selector, changes);
     renders++;
 
     if (!groupModel) {
-      // Scope disappeared — all changes on this element are causal
+      // Selector/scope could not be resolved — leave the changes unverified.
       for (const sc of changes) {
-        sc.verified = true;
-        sc.impactSummary = 'scope element disappeared';
-        causes.push(sc);
+        sc.verified = undefined;
       }
       continue;
     }
 
     const groupDiffs = countSpatialDiffs(baselineModel, groupModel);
+    const groupImprovement = diffImprovement(currentDiffs, groupDiffs);
 
-    if (groupDiffs.total === 0) {
-      // All changes on this element together have no impact — skip individual testing
+    if (groupImprovement.total <= 0) {
+      // Reverting all changes on this element does not improve the page.
       for (const sc of changes) {
         sc.verified = false;
         noImpact.push(sc);
@@ -76,28 +77,27 @@ export async function analyzeCausation(
       // Single property — it's the verified cause
       const sc = changes[0];
       sc.verified = true;
-      sc.impactSummary = formatImpact(groupDiffs);
+      sc.impactSummary = formatImpact(groupImprovement);
       causes.push(sc);
       continue;
     }
 
-    // Phase 2: Multiple properties changed on same element — test individually
+    // Phase 2: Multiple properties changed on same element — revert individually.
     for (const sc of changes) {
-      const singleModel = await renderWithChanges(page, scope, selector, [sc]);
+      const singleModel = await renderWithRevertedChanges(page, scope, selector, [sc]);
       renders++;
 
       if (!singleModel) {
-        sc.verified = true;
-        sc.impactSummary = 'scope element disappeared';
-        causes.push(sc);
+        sc.verified = undefined;
         continue;
       }
 
       const singleDiffs = countSpatialDiffs(baselineModel, singleModel);
+      const singleImprovement = diffImprovement(currentDiffs, singleDiffs);
 
-      if (singleDiffs.total > 0) {
+      if (singleImprovement.total > 0) {
         sc.verified = true;
-        sc.impactSummary = formatImpact(singleDiffs);
+        sc.impactSummary = formatImpact(singleImprovement);
         causes.push(sc);
       } else {
         sc.verified = false;
@@ -110,156 +110,80 @@ export async function analyzeCausation(
 }
 
 /**
- * Apply specific CSS changes to an element and recapture the spatial model.
+ * Revert specific CSS changes on an element and recapture the spatial model.
  * Returns null if the scope element is not found.
  */
-async function renderWithChanges(
+async function renderWithRevertedChanges(
   page: Page,
   scope: string,
   selector: string,
   changes: StyleChange[],
 ): Promise<SpatialModel | null> {
-  // Build the CSS override script
   const overrides = changes.map(sc => ({
     property: sc.property.replace(/[A-Z]/g, c => '-' + c.toLowerCase()),
-    value: sc.current,
+    value: sc.baseline === '(unset)' ? '' : sc.baseline,
   }));
 
-  // Apply overrides, capture, then revert
-  const model = await page.evaluate(({ scope, selector, overrides }) => {
-    const el = document.querySelector(selector) as HTMLElement | null;
+  const originals = await page.evaluate(({ selector, overrides }) => {
+    const el = resolveElement(selector) as HTMLElement | null;
     if (!el) return null;
 
-    // Save original values
     const originals: { property: string; value: string }[] = [];
     for (const { property, value } of overrides) {
       originals.push({ property, value: el.style.getPropertyValue(property) });
-      el.style.setProperty(property, value);
-    }
-
-    // Capture spatial model (inline — we can't import capture.ts here)
-    const root = document.querySelector(scope);
-    if (!root) {
-      // Revert
-      for (const { property, value } of originals) {
-        if (value) el.style.setProperty(property, value);
-        else el.style.removeProperty(property);
-      }
-      return null;
-    }
-
-    // Force a layout recalc
-    void root.getBoundingClientRect();
-
-    const elements: any[] = [];
-    const allEls = [root, ...Array.from(root.querySelectorAll('*'))];
-
-    for (const node of allEls) {
-      const rect = node.getBoundingClientRect();
-      if (rect.width === 0 && rect.height === 0) continue;
-      const computed = window.getComputedStyle(node);
-      if (computed.display === 'none') continue;
-
-      // Minimal model — just what we need for spatial comparison
-      const zIndex = computed.zIndex === 'auto' ? 0 : parseInt(computed.zIndex);
-      const clip = detectClipSimple(node);
-      const visibility = computed.visibility;
-      const opacity = computed.opacity;
-
-      elements.push({
-        selector: buildSelectorSimple(node, root),
-        box: {
-          x: Math.round(rect.x),
-          y: Math.round(rect.y),
-          width: Math.round(rect.width),
-          height: Math.round(rect.height),
-        },
-        zIndex,
-        visibility,
-        opacity,
-        clip,
-        overflow: computed.overflow,
-      });
-    }
-
-    // Deduplicate selectors (must match main capture logic)
-    const selectorCount = new Map<string, number>();
-    for (const e of elements) {
-      selectorCount.set(e.selector, (selectorCount.get(e.selector) || 0) + 1);
-    }
-    const selectorIndex = new Map<string, number>();
-    for (const e of elements) {
-      if (selectorCount.get(e.selector)! > 1) {
-        const idx = (selectorIndex.get(e.selector) || 0) + 1;
-        selectorIndex.set(e.selector, idx);
-        e.selector = `${e.selector}[${idx}]`;
-      }
-    }
-
-    // Revert
-    for (const { property, value } of originals) {
       if (value) el.style.setProperty(property, value);
       else el.style.removeProperty(property);
     }
 
-    return {
-      viewport: { width: window.innerWidth, height: window.innerHeight },
-      url: window.location.href,
-      timestamp: Date.now(),
-      elements,
-    };
+    return originals;
 
-    function buildSelectorSimple(el: Element, root: Element): string {
-      const parts: string[] = [];
-      let current: Element | null = el;
-      while (current && current !== document.documentElement) {
-        let part = current.tagName.toLowerCase();
-        const testId = current.getAttribute('data-testid');
-        if (testId) { parts.unshift(`[data-testid="${testId}"]`); break; }
-        if (current.id) { parts.unshift(`#${current.id}`); break; }
-        if (current.className && typeof current.className === 'string' && current.className.trim()) {
-          part += '.' + current.className.trim().split(/\s+/).slice(0, 2).join('.');
-        }
-        const parent = current.parentElement;
-        if (parent) {
-          const siblings = Array.from(parent.children).filter(c => c.tagName === current!.tagName);
-          if (siblings.length > 1) {
-            const index = siblings.indexOf(current) + 1;
-            part += `:nth-of-type(${index})`;
-          }
-        }
-        parts.unshift(part);
-        current = current.parentElement;
-      }
-      return parts.join(' > ');
+    function resolveElement(rawSelector: string): Element | null {
+      const occurrenceMatch = rawSelector.match(/^(.*)\[(\d+)\]$/);
+      if (!occurrenceMatch) return document.querySelector(rawSelector);
+
+      const baseSelector = occurrenceMatch[1];
+      const index = Number(occurrenceMatch[2]) - 1;
+      if (!baseSelector || index < 0) return null;
+      return document.querySelectorAll(baseSelector)[index] ?? null;
     }
+  }, { selector, overrides });
 
-    function detectClipSimple(el: Element): { isClipped: boolean } {
-      const rect = el.getBoundingClientRect();
-      let parent = el.parentElement;
-      while (parent) {
-        const ps = window.getComputedStyle(parent);
-        const hasClip = ps.overflow === 'hidden' || ps.overflow === 'auto' || ps.overflow === 'scroll'
-          || ps.overflowX === 'hidden' || ps.overflowY === 'hidden';
-        if (hasClip) {
-          const pr = parent.getBoundingClientRect();
-          if (rect.top < pr.top || rect.bottom > pr.bottom || rect.left < pr.left || rect.right > pr.right) {
-            return { isClipped: true };
-          }
-        }
-        parent = parent.parentElement;
+  if (!originals) return null;
+
+  try {
+    return await captureModel(page, scope);
+  } finally {
+    await page.evaluate(({ selector, originals }) => {
+      const el = resolveElement(selector) as HTMLElement | null;
+      if (!el) return;
+
+      for (const { property, value } of originals) {
+        if (value) el.style.setProperty(property, value);
+        else el.style.removeProperty(property);
       }
-      return { isClipped: false };
-    }
-  }, { scope, selector, overrides });
 
-  return model as SpatialModel | null;
+      function resolveElement(rawSelector: string): Element | null {
+        const occurrenceMatch = rawSelector.match(/^(.*)\[(\d+)\]$/);
+        if (!occurrenceMatch) return document.querySelector(rawSelector);
+
+        const baseSelector = occurrenceMatch[1];
+        const index = Number(occurrenceMatch[2]) - 1;
+        if (!baseSelector || index < 0) return null;
+        return document.querySelectorAll(baseSelector)[index] ?? null;
+      }
+    }, { selector, originals });
+  }
+}
+
+async function captureModel(page: Page, scope: string): Promise<SpatialModel> {
+  return page.evaluate(captureScope, scope) as Promise<SpatialModel>;
 }
 
 interface SpatialDiffCounts {
   clipped: number;
   shifted: number;
   resized: number;
+  missing: number;
   total: number;
 }
 
@@ -269,13 +193,15 @@ interface SpatialDiffCounts {
 function countSpatialDiffs(baseline: SpatialModel, test: SpatialModel): SpatialDiffCounts {
   const baseMap = new Map(baseline.elements.map(el => [el.selector, el]));
   const testMap = new Map(test.elements.map((el: any) => [el.selector, el]));
-  const counts: SpatialDiffCounts = { clipped: 0, shifted: 0, resized: 0, total: 0 };
+  const counts: SpatialDiffCounts = { clipped: 0, shifted: 0, resized: 0, missing: 0, total: 0 };
 
-  // Only compare elements that exist in both — selector mismatches from deduplication
-  // ordering differences should not count as diffs
   for (const [sel, baseEl] of baseMap) {
     const testEl = testMap.get(sel) as any;
-    if (!testEl) continue; // Skip disappeared — could be dedup ordering difference
+    if (!testEl) {
+      counts.missing++;
+      counts.total++;
+      continue;
+    }
 
     // Clip changed
     if (!baseEl.clip.isClipped && testEl.clip?.isClipped) { counts.clipped++; counts.total++; }
@@ -298,10 +224,21 @@ function countSpatialDiffs(baseline: SpatialModel, test: SpatialModel): SpatialD
   return counts;
 }
 
+function diffImprovement(before: SpatialDiffCounts, after: SpatialDiffCounts): SpatialDiffCounts {
+  return {
+    clipped: Math.max(0, before.clipped - after.clipped),
+    shifted: Math.max(0, before.shifted - after.shifted),
+    resized: Math.max(0, before.resized - after.resized),
+    missing: Math.max(0, before.missing - after.missing),
+    total: Math.max(0, before.total - after.total),
+  };
+}
+
 function formatImpact(diffs: SpatialDiffCounts): string {
   const parts: string[] = [];
   if (diffs.clipped > 0) parts.push(`clipped ${diffs.clipped} elements`);
   if (diffs.shifted > 0) parts.push(`shifted ${diffs.shifted} elements`);
   if (diffs.resized > 0) parts.push(`resized ${diffs.resized} elements`);
+  if (diffs.missing > 0) parts.push(`restored ${diffs.missing} elements`);
   return parts.join(', ');
 }

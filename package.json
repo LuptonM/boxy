@@ -21,7 +21,7 @@
   "scripts": {
     "build": "tsc && tsc -p tsconfig.esm.json && node scripts/write-esm-package.mjs",
     "dev": "tsc --watch",
-    "test": "npm run build && node test/unit.mjs && node test/linter.test.mjs && node test/regression.test.mjs && node test/capture.test.mjs && node test/run.mjs",
+    "test": "npm run build && node test/unit.mjs && node test/linter.test.mjs && node test/regression.test.mjs && node test/capture.test.mjs && node test/run.mjs && node test/scenarios.mjs && node test/mutations.mjs",
     "test:linter": "npm run build && node test/linter.test.mjs",
     "test:regression": "npm run build && node test/regression.test.mjs",
     "test:broken": "npm run build && node test/run.mjs --broken",

@@ -66,7 +66,7 @@ if (!SCENARIO || SCENARIO === 'modal') {
   await page.waitForTimeout(150);
   await boxy.capture(page, { name: 'modal-state-dropdown', scope: '[data-testid="modal"]' });
 
-  const report = summarize(linter);
+  const report = summarize(boxy);
   scenarios.push({ name: 'Modal Form', ...report });
   await ctx.close();
 }
@@ -132,7 +132,7 @@ if (!SCENARIO || SCENARIO === 'dashboard') {
     await boxy.capture(page, { name: 'dashboard-nav-tooltip', scope: '[data-testid="layout"]' });
   }
 
-  const report = summarize(linter);
+  const report = summarize(boxy);
   scenarios.push({ name: 'Dashboard', ...report });
   await ctx.close();
 }
@@ -195,7 +195,7 @@ if (!SCENARIO || SCENARIO === 'chat') {
   // In the real page JS, opening emoji closes attach — but let's capture the state
   await boxy.capture(page, { name: 'chat-attach-only', scope: '[data-testid="chat-area"]' });
 
-  const report = summarize(linter);
+  const report = summarize(boxy);
   scenarios.push({ name: 'Chat UI', ...report });
   await ctx.close();
 }
@@ -223,7 +223,7 @@ console.log('  ═════════════════════�
 
 process.exit(totalErrors > 0 ? 1 : 0);
 
-function summarize(linter) {
+function summarize(boxy) {
   const steps = boxy.getSteps();
   let errors = 0;
   let warnings = 0;
