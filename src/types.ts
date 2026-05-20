@@ -99,10 +99,19 @@ export interface Issue {
   affectedChildren?: string[];
 }
 
+export interface StepNotice {
+  type: 'baseline-created' | 'baseline-updated';
+  severity?: 'error' | 'info';
+  title: string;
+  detail: string;
+}
+
 export interface StepResult {
   name: string;
   issues: Issue[];
+  notices?: StepNotice[];
   screenshotPath?: string;
+  baselineScreenshotPath?: string;
 }
 
 export interface LinterConfig {

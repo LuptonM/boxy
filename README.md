@@ -55,11 +55,44 @@ afterAll(() => {
 });
 ```
 
-## Two Modes
+## How It Works
 
-### Linter Mode (no baseline needed)
+### First run (no baseline)
 
-Works on first run, zero setup. Analyses the current page and detects:
+Baselines are auto-saved on first run, but missing baselines fail by default so CI catches an absent trust anchor. For an intentional setup run:
+
+```bash
+LAYOUT_INIT=true npx playwright test
+```
+
+On the first run, Boxy saves the current layout as the baseline and runs lint checks only (no regression comparison). Without `LAYOUT_INIT=true` or `acceptNewBaselines: true`, that baseline-created notice is reported as a failure.
+
+### Subsequent runs
+
+On subsequent runs, Boxy compares against the saved baseline and reports both lint issues and regressions.
+
+### Updating baselines after intentional changes
+
+When you intentionally change the layout, update baselines:
+
+```bash
+LAYOUT_UPDATE=true npx playwright test
+```
+
+Or per-capture:
+
+```js
+await boxy.capture(page, { name: 'redesigned-header', update: true });
+```
+
+### Resetting baselines
+
+```js
+boxy.resetBaseline('dashboard');   // delete one baseline
+boxy.resetAllBaselines();          // clear all baselines and current snapshots
+```
+
+### Lint checks (no baseline needed)
 
 | Check | What it catches |
 |-------|----------------|
@@ -68,19 +101,7 @@ Works on first run, zero setup. Analyses the current page and detects:
 | **Collapsed** | Element has near-zero width/height but contains content |
 | **Off-screen** | Positioned element outside viewport bounds |
 
-### Regression Mode (with baseline)
-
-Compare current branch against baselines. Detect unintended side-effects of CSS changes.
-
-```bash
-# On main branch — save baselines
-LAYOUT_BASELINE=true npx playwright test
-
-# On feature branch — compare against baselines
-npx playwright test
-```
-
-Detects:
+### Regression checks (with baseline)
 
 | Check | What it catches |
 |-------|----------------|
@@ -134,8 +155,10 @@ const result = await boxy.diagnoseCauses(page, 'detail');
 
 ```js
 const boxy = createBoxy({
-  snapshotDir: '.boxy',    // where to store baselines
-  allowMissingBaseline: false,         // fail when baseline is missing (set true for first run)
+  snapshotDir: '.boxy',              // where to store baselines
+  update: false,                     // set true to overwrite baselines (or use LAYOUT_UPDATE=true)
+  allowMissingBaseline: true,        // auto-save baseline on first run (set false to require existing baseline)
+  acceptNewBaselines: false,         // set true for intentional setup runs (or use LAYOUT_INIT=true)
   config: {
     spacingThreshold: 4,     // px — spacing changes below this are ignored
     positionThreshold: 20,   // px — position shifts below this are ignored

@@ -13,15 +13,30 @@ export function printReport(steps: StepResult[]): number {
   for (const step of steps) {
     const errors = step.issues.filter(i => i.severity === 'error').length;
     const warnings = step.issues.filter(i => i.severity === 'warning').length;
-    totalErrors += errors;
+    const notices = step.notices ?? [];
+    const noticeErrors = notices.filter(n => n.severity === 'error').length;
+    totalErrors += errors + noticeErrors;
     totalWarnings += warnings;
 
-    if (step.issues.length === 0) {
+    if (step.issues.length === 0 && notices.length === 0) {
       console.log(`  ✓ ${step.name}`);
       continue;
     }
 
-    console.log(`  ✗ ${step.name} (${errors} errors, ${warnings} warnings)`);
+    const statusIcon = errors > 0 || noticeErrors > 0 ? '✗' : warnings > 0 ? '⚠' : 'ⓘ';
+    const errorLabel = noticeErrors > 0 ? `${errors} errors, ${noticeErrors} baseline failures` : `${errors} errors`;
+    console.log(`  ${statusIcon} ${step.name} (${errorLabel}, ${warnings} warnings, ${notices.length} notices)`);
+
+    if (notices.length > 0) {
+      console.log(`\n    ┌ BASELINE`);
+      for (const notice of notices) {
+        const icon = notice.severity === 'error' ? '✗' : 'ⓘ';
+        const indented = notice.detail.split('\n').map(l => `    │     ${l}`).join('\n');
+        console.log(`    │ ${icon} ${notice.title}`);
+        console.log(indented);
+      }
+      console.log('    └');
+    }
 
     // Print issues grouped by category
     const grouped = groupByCategory(step.issues);
