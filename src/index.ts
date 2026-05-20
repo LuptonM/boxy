@@ -1,7 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 import type { Page } from 'playwright';
-import type { CaptureResult, StepResult, LinterConfig, SpatialModel, StyleChange, CausationResult } from './types.js';
+import type { CaptureResult, StepResult, LinterConfig, SpatialModel, StyleChange, CausationResult, Issue, StepNotice } from './types.js';
 import { DEFAULT_CONFIG } from './types.js';
 import { capture as captureModel } from './capture.js';
 import { lint } from './linter.js';
@@ -18,8 +18,9 @@ const DEFAULT_SNAPSHOT_DIR = '.boxy';
 interface BoxyOptions {
   snapshotDir?: string;
   config?: Partial<LinterConfig>;
-  baseline?: boolean;
+  update?: boolean;
   allowMissingBaseline?: boolean;
+  acceptNewBaselines?: boolean;
 }
 
 function validateCaptureName(name: string): void {
@@ -46,8 +47,9 @@ function validateCaptureName(name: string): void {
 export function createBoxy(options: BoxyOptions = {}) {
   const snapshotDir = options.snapshotDir || DEFAULT_SNAPSHOT_DIR;
   const config = { ...DEFAULT_CONFIG, ...options.config };
-  const isBaseline = options.baseline ?? process.env.LAYOUT_BASELINE === 'true';
-  const allowMissingBaseline = options.allowMissingBaseline ?? false;
+  const isUpdate = options.update ?? process.env.LAYOUT_UPDATE === 'true';
+  const allowMissingBaseline = options.allowMissingBaseline ?? true;
+  const acceptNewBaselines = options.acceptNewBaselines ?? process.env.LAYOUT_INIT === 'true';
 
   const baselineDir = path.join(snapshotDir, 'baseline');
   const currentDir = path.join(snapshotDir, 'current');
@@ -62,62 +64,105 @@ export function createBoxy(options: BoxyOptions = {}) {
     /**
      * Capture the spatial model at this point in the test.
      */
-    async capture(page: Page, { name, scope = 'body' }: { name: string; scope?: string }): Promise<StepResult> {
+    async capture(page: Page, { name, scope = 'body', update }: { name: string; scope?: string; update?: boolean }): Promise<StepResult> {
       validateCaptureName(name);
 
       const result = await captureModel(page, { name, scope });
-      const issues = [];
+      const issues: Issue[] = [];
+      const notices: StepNotice[] = [];
 
-      // Always run linter (no baseline needed)
+      // Always run linter
       const lintIssues = lint(result.model, config);
       issues.push(...lintIssues);
 
-      if (isBaseline) {
-        // Save as baseline
-        const modelPath = path.join(baselineDir, `${name}.json`);
-        fs.writeFileSync(modelPath, JSON.stringify(result.model, null, 2));
-
+      const baselinePath = path.join(baselineDir, `${name}.json`);
+      const baselineExists = fs.existsSync(baselinePath);
+      const shouldUpdate = update ?? isUpdate;
+      const writeBaseline = () => {
+        fs.writeFileSync(baselinePath, JSON.stringify(result.model, null, 2));
         if (result.screenshot) {
           fs.writeFileSync(path.join(baselineDir, `${name}.png`), result.screenshot);
         }
-      } else {
-        // Save current
-        const modelPath = path.join(currentDir, `${name}.json`);
-        fs.writeFileSync(modelPath, JSON.stringify(result.model, null, 2));
+      };
 
-        if (result.screenshot) {
-          fs.writeFileSync(path.join(currentDir, `${name}.png`), result.screenshot);
+      if (!baselineExists) {
+        if (!allowMissingBaseline) {
+          throw new Error(
+            `Missing layout baseline for "${name}" at ${baselinePath}. ` +
+            'Run tests once to auto-save baselines, or set allowMissingBaseline: true.'
+          );
         }
 
-        // Compare against baseline if it exists
-        const baselinePath = path.join(baselineDir, `${name}.json`);
-        if (fs.existsSync(baselinePath)) {
+        // Auto-save current as baseline
+        writeBaseline();
+        notices.push({
+          type: 'baseline-created',
+          severity: acceptNewBaselines ? 'info' : 'error',
+          title: 'Baseline created',
+          detail: acceptNewBaselines
+            ? `No existing baseline was found for "${name}", so the current layout was saved as the baseline without a regression comparison.`
+            : `No existing baseline was found for "${name}", so the current layout was saved as the baseline without a regression comparison. Treating this as a failure; set LAYOUT_INIT=true or acceptNewBaselines: true for an intentional setup run.`,
+        });
+      } else {
+        if (shouldUpdate) {
+          // Overwrite baseline with current
+          writeBaseline();
+          notices.push({
+            type: 'baseline-updated',
+            severity: 'info',
+            title: 'Baseline updated',
+            detail: `The baseline for "${name}" was updated from the current layout; regression differences against the previous baseline were not recorded as failures.`,
+          });
+        } else {
+          // Baseline exists — compare against it
           const baselineModel = JSON.parse(fs.readFileSync(baselinePath, 'utf-8')) as SpatialModel;
           const regressionIssues = compare(baselineModel, result.model, config);
           issues.push(...regressionIssues);
-        } else if (!allowMissingBaseline) {
-          throw new Error(
-            `Missing layout baseline for "${name}" at ${baselinePath}. ` +
-            'Run in baseline mode first or set allowMissingBaseline: true to skip regression comparison.'
-          );
+
+          // Save current screenshot for report (no .json)
+          if (result.screenshot) {
+            fs.writeFileSync(path.join(currentDir, `${name}.png`), result.screenshot);
+          }
         }
       }
 
-      const screenshotPath = isBaseline
-        ? path.join(baselineDir, `${name}.png`)
-        : path.join(currentDir, `${name}.png`);
-
+      const hasComparison = baselineExists && !shouldUpdate;
       const step: StepResult = {
         name,
         issues,
+        notices,
         screenshotPath: result.screenshot
-          ? (isBaseline ? `baseline/${name}.png` : `current/${name}.png`)
+          ? (shouldUpdate || !baselineExists ? `baseline/${name}.png` : `current/${name}.png`)
+          : undefined,
+        baselineScreenshotPath: hasComparison && fs.existsSync(path.join(baselineDir, `${name}.png`))
+          ? `baseline/${name}.png`
           : undefined,
       };
 
       steps.push(step);
       stepScopes.set(name, scope);
       return step;
+    },
+
+    /**
+     * Delete a specific baseline (.json + .png).
+     */
+    resetBaseline(name: string): void {
+      validateCaptureName(name);
+      const jsonPath = path.join(baselineDir, `${name}.json`);
+      const pngPath = path.join(baselineDir, `${name}.png`);
+      if (fs.existsSync(jsonPath)) fs.unlinkSync(jsonPath);
+      if (fs.existsSync(pngPath)) fs.unlinkSync(pngPath);
+    },
+
+    /**
+     * Delete all baselines and current snapshots, recreate empty dirs.
+     */
+    resetAllBaselines(): void {
+      fs.rmSync(baselineDir, { recursive: true, force: true });
+      fs.rmSync(currentDir, { recursive: true, force: true });
+      fs.mkdirSync(baselineDir, { recursive: true });
+      fs.mkdirSync(currentDir, { recursive: true });
     },
 
     /**
@@ -149,7 +194,10 @@ export function createBoxy(options: BoxyOptions = {}) {
      * Check if any errors were found.
      */
     hasErrors(): boolean {
-      return steps.some(s => s.issues.some(i => i.severity === 'error'));
+      return steps.some(s =>
+        s.issues.some(i => i.severity === 'error') ||
+        s.notices?.some(n => n.severity === 'error')
+      );
     },
 
     /**

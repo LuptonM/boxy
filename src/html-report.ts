@@ -13,9 +13,23 @@ export function generateHTMLReport(steps: StepResult[]): string {
     const hasFailed = step.issues.length > 0;
 
     const issuesHTML = hasFailed ? renderIssues(step.issues) : '';
-    const screenshotHTML = step.screenshotPath
-      ? `<div class="screenshot"><img src="${esc(step.screenshotPath)}" alt="Screenshot"></div>`
-      : '';
+
+    let screenshotHTML = '';
+    if (step.baselineScreenshotPath && step.screenshotPath) {
+      screenshotHTML = `
+        <div class="screenshot-compare">
+          <div class="screenshot-side">
+            <div class="screenshot-label">Baseline</div>
+            <img src="${esc(step.baselineScreenshotPath)}" alt="Baseline">
+          </div>
+          <div class="screenshot-side">
+            <div class="screenshot-label">Current</div>
+            <img src="${esc(step.screenshotPath)}" alt="Current">
+          </div>
+        </div>`;
+    } else if (step.screenshotPath) {
+      screenshotHTML = `<div class="screenshot"><img src="${esc(step.screenshotPath)}" alt="Screenshot"></div>`;
+    }
 
     return `
       <div class="step ${hasFailed ? 'failed' : 'passed'}">
@@ -59,6 +73,10 @@ body{font-family:Inter,system-ui,sans-serif;background:#0f172a;color:#e2e8f0;pad
 .step-count{margin-left:auto;font-size:12px;color:#f87171;background:#450a0a;padding:3px 8px;border-radius:4px}
 .screenshot{padding:16px}
 .screenshot img{width:100%;border-radius:6px;border:1px solid #334155}
+.screenshot-compare{display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:16px}
+.screenshot-side{position:relative}
+.screenshot-side img{width:100%;border-radius:6px;border:1px solid #334155}
+.screenshot-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#94a3b8;margin-bottom:6px;text-align:center}
 .issues{padding:16px 20px}
 .issue-group{margin-bottom:12px}
 .issue-cat{font-size:10px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:6px;padding:3px 6px;background:#0f172a;border-radius:3px;display:inline-block}

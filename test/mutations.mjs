@@ -1,7 +1,7 @@
 /**
  * Mutation-based validation suite.
  *
- * 1. Capture baselines from the clean sample project view
+ * 1. Auto-save baselines from the clean sample project view (first capture)
  * 2. Inject realistic CSS mutations (the kind someone introduces in a PR)
  * 3. Run comparison against baselines
  * 4. Score: did the linter detect the mutation?
@@ -175,12 +175,15 @@ try {
 
 const snapshotBase = path.join(__dirname, '..', '.boxy', 'mutations');
 
-// Phase 1: Capture baselines
+// Phase 1: Auto-save baselines (delete old snapshots, then capture — auto-saves on first run)
 console.log('  Phase 1: Capturing baselines...\n');
 
 for (const mutation of mutations) {
   const snapshotDir = path.join(snapshotBase, mutation.name);
-  const boxy = createBoxy({ snapshotDir, baseline: true });
+  // Clear any existing snapshots so first capture auto-saves as baseline
+  fs.rmSync(snapshotDir, { recursive: true, force: true });
+
+  const boxy = createBoxy({ snapshotDir });
 
   const ctx = await browser.newContext({ viewport: { width: 1440, height: 900 } });
   const page = await ctx.newPage();
@@ -213,7 +216,7 @@ const results = [];
 
 for (const mutation of mutations) {
   const snapshotDir = path.join(snapshotBase, mutation.name);
-  const boxy = createBoxy({ snapshotDir, allowMissingBaseline: true });
+  const boxy = createBoxy({ snapshotDir });
 
   const ctx = await browser.newContext({ viewport: { width: 1440, height: 900 } });
   const page = await ctx.newPage();

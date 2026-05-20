@@ -192,23 +192,24 @@
   <div class="usage-step">
     <div class="usage-step-header">
       <span class="usage-step-num">3</span>
-      <span class="usage-step-title">Save baseline (first run)</span>
+      <span class="usage-step-title">Run tests (baselines auto-saved on first run)</span>
     </div>
     <div class="code-block">
-<span class="dollar">$</span> LAYOUT_BASELINE=true npx playwright test
-<span class="cmt"># Saves spatial snapshots to .boxy/baseline/</span>
+<span class="dollar">$</span> npx playwright test
+<span class="cmt"># First run: auto-saves baselines to .boxy/baseline/</span>
+<span class="cmt"># Subsequent runs: compares against saved baselines</span>
     </div>
   </div>
 
   <div class="usage-step">
     <div class="usage-step-header">
       <span class="usage-step-num">4</span>
-      <span class="usage-step-title">Catch regressions (subsequent runs)</span>
+      <span class="usage-step-title">Update baselines after intentional changes</span>
     </div>
     <div class="code-block">
-<span class="dollar">$</span> npx playwright test
+<span class="dollar">$</span> LAYOUT_UPDATE=true npx playwright test
 
-<span class="cmt"># Boxy compares against baseline and reports:</span>
+<span class="cmt"># Overwrites baselines, then reports:</span>
 <span class="err">  CLIPPING  Element clipped by parent overflow</span>
 <span class="err">            [data-testid="action-dropdown"]</span>
 <span class="err">            clipped by: [data-testid="table-area"]</span>

@@ -21,7 +21,7 @@
   "scripts": {
     "build": "tsc && tsc -p tsconfig.esm.json && node scripts/write-esm-package.mjs",
     "dev": "tsc --watch",
-    "test": "npm run build && node test/unit.mjs && node test/linter.test.mjs && node test/regression.test.mjs && node test/run.mjs",
+    "test": "npm run build && node test/unit.mjs && node test/linter.test.mjs && node test/regression.test.mjs && node test/capture.test.mjs && node test/run.mjs",
     "test:linter": "npm run build && node test/linter.test.mjs",
     "test:regression": "npm run build && node test/regression.test.mjs",
     "test:broken": "npm run build && node test/run.mjs --broken",
@@ -29,7 +29,6 @@
     "test:scenarios:broken": "npm run build && node test/scenarios.mjs --broken",
     "test:mutations": "npm run build && node test/mutations.mjs",
     "test:mutations:verbose": "npm run build && node test/mutations.mjs --verbose",
-    "test:baseline": "npm run build && LAYOUT_BASELINE=true node test/run.mjs",
     "build:demo": "esbuild src/browser.ts --bundle --format=iife --global-name=Boxy --outfile=docs/demo.js && esbuild src/demo-app.ts --bundle --format=iife --outfile=docs/demo-app.js",
     "prepublishOnly": "npm run build"
   },
